@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import '../styles/base.css'
+import '../styles/layout.css'
+import '../styles/components.css'
+import DaumPostcodeScript from '../components/DaumPostcodeScript';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +31,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <DaumPostcodeScript />
         {children}
       </body>
     </html>
