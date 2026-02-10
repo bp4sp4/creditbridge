@@ -530,7 +530,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                       value={`${formData.postalCode} ${formData.addressMain}`}
                       readOnly
                       tabIndex={-1}
-                      style={{ backgroundColor: '#f9fafb' }}
+                      
                     />
                     <input
                       type="text"
@@ -580,14 +580,32 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                   accept="image/*"
                   className={styles.inputField}
                   onChange={(e) => setFormData({ ...formData, photo: e.target.files?.[0] || null })}
+                  style={{
+                    padding: '16px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    color: formData.photo ? '#4e5968' : '#9ca3af',
+                    fontSize: '14px',
+                    fontWeight: formData.photo ? '500' : '400'
+                  }}
                 />
+                <div style={{ fontSize: '12px', color: '#8b95a1', marginTop: '8px', textAlign: 'center' }}>
+                  {formData.photo ? (
+                    <span>✓ {formData.photo.name} 선택됨</span>
+                  ) : (
+                    <span>클릭하여 사진을 선택해주세요</span>
+                  )}
+                </div>
                 {formData.photo && (
-                  <div style={{ marginTop: 12 }}>
+                  <div style={{ marginTop: 16, textAlign: 'center' }}>
                     <img
                       src={URL.createObjectURL(formData.photo)}
                       alt="미리보기"
                       style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 12, border: '1.5px solid #e5e8eb', boxShadow: '0 2px 8px 0 rgba(0,0,0,0.04)' }}
                     />
+                    <div style={{ fontSize: '12px', color: '#8b95a1', marginTop: '8px' }}>
+                      미리보기
+                    </div>
                   </div>
                 )}
               </div>
