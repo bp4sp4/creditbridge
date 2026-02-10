@@ -15,6 +15,10 @@ export default function AdminLoginPage() {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN') {
+        // 로그인 시간을 세션 스토리지에 저장
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('adminLoginTime', Date.now().toString());
+        }
         router.push('/admin/components');
       }
     });
@@ -61,22 +65,15 @@ export default function AdminLoginPage() {
         padding: '0 20px'
       }}>
         {/* 헤더 */}
-        <div style={{ marginBottom: '48px', textAlign: 'center' }}>
+        <div style={{ marginBottom: '40px', textAlign: 'center' }}>
           <h1 style={{
             fontSize: '28px',
             fontWeight: 700,
             color: '#191f28',
-            margin: '0 0 8px 0'
-          }}>
-            관리자
-          </h1>
-          <p style={{
-            fontSize: '14px',
-            color: '#8b95a1',
             margin: 0
           }}>
-            로그인해서 신청 현황을 관리하세요
-          </p>
+            로그인
+          </h1>
         </div>
 
         {/* 로그인 폼 */}
@@ -213,16 +210,6 @@ export default function AdminLoginPage() {
           </button>
         </form>
 
-        {/* 하단 정보 */}
-        <p style={{
-          marginTop: '32px',
-          fontSize: '12px',
-          color: '#8b95a1',
-          textAlign: 'center',
-          margin: '32px 0 0 0'
-        }}>
-          계정이 없으신가요? 관리자에게 문의하세요
-        </p>
       </div>
     </div>
   );

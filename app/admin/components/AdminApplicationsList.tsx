@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '../../../lib/supabase/client';
 import styles from './admin.module.css'; // 위 CSS 파일 임포트
 
@@ -25,35 +26,113 @@ type Application = {
 };
 
 export default function AdminApplicationsList() {
+  const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
 
+  // 로그아웃 함수
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    sessionStorage.removeItem('adminLoginTime');
+    router.push('/admin/login');
+  };
+
+  // 24시간 자동 로그아웃
+  useEffect(() => {
+    const supabase = createClient();
+    const loginTime = sessionStorage.getItem('adminLoginTime');
+
+    if (!loginTime) {
+      // 로그인 시간이 없으면 현재 시간 저장
+      sessionStorage.setItem('adminLoginTime', Date.now().toString());
+    } else {
+      // 24시간 경과 확인
+      const now = Date.now();
+      const elapsed = now - parseInt(loginTime);
+      const oneDay = 24 * 60 * 60 * 1000; // 24시간을 밀리초로
+
+      if (elapsed > oneDay) {
+        // 24시간 경과했으면 로그아웃
+        handleLogout();
+        return;
+      }
+
+      // 남은 시간만큼 타이머 설정
+      const remainingTime = oneDay - elapsed;
+      const logoutTimer = setTimeout(() => {
+        handleLogout();
+      }, remainingTime);
+
+      return () => clearTimeout(logoutTimer);
+    }
+  }, []);
+
+  // 데이터 조회 useEffect
   useEffect(() => {
     const supabase = createClient();
     async function fetchApplications() {
       setLoading(true);
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      // 전체 개수 조회
+      const { count } = await supabase
+        .from('certificate_applications')
+        .select('*', { count: 'exact', head: true });
+
+      // 페이지별 데이터 조회
       const { data, error } = await supabase
         .from('certificate_applications')
         .select('*')
-        .order('created_at', { ascending: false });
-      
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
       if (!error) {
         setApplications(data || []);
+        setTotalCount(count || 0);
       }
       setLoading(false);
     }
     fetchApplications();
-  }, []);
+  }, [currentPage]);
 
   if (loading) return <div className={styles.loading}>데이터를 불러오고 있습니다...</div>;
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2 className={styles.title}>자격증 신청 내역</h2>
-        <div style={{ color: '#8b95a1', fontSize: '14px' }}>
-          총 <strong>{applications.length}</strong>건
+        <div>
+          <h2 className={styles.title}>자격증 신청 내역</h2>
+          <div style={{ color: '#8b95a1', fontSize: '14px' }}>
+            총 <strong>{applications.length}</strong>건
+          </div>
         </div>
+        <button
+          onClick={handleLogout}
+          style={{
+            padding: '10px 16px',
+            fontSize: '14px',
+            fontWeight: 500,
+            color: '#ffffff',
+            backgroundColor: '#ef4444',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = '#dc2626';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = '#ef4444';
+          }}
+        >
+          로그아웃
+        </button>
       </div>
 
       <div className={styles.card}>
@@ -68,6 +147,7 @@ export default function AdminApplicationsList() {
                 <th>결제 상태</th>
                 <th>결제 금액</th>
                 <th>결제일</th>
+                <th>결제번호</th>
                 <th>사진</th>
                 <th>신청일</th>
               </tr>
@@ -117,6 +197,11 @@ export default function AdminApplicationsList() {
                       {app.paid_at ? new Date(app.paid_at).toLocaleDateString('ko-KR') : '-'}
                     </div>
                   </td>
+                  <td>
+                    <div style={{ fontSize: '12px', color: '#6b7280', fontFamily: 'monospace' }}>
+                      {app.mul_no ? app.mul_no : '-'}
+                    </div>
+                  </td>
 
                   <td>
                     {app.photo_url ? (
@@ -143,6 +228,111 @@ export default function AdminApplicationsList() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* 페이징 */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '20px',
+          borderTop: '1px solid #f2f2f2'
+        }}>
+          <button
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            style={{
+              padding: '6px 12px',
+              fontSize: '13px',
+              border: '1px solid #e5e8eb',
+              borderRadius: '6px',
+              backgroundColor: currentPage === 1 ? '#f2f2f2' : '#ffffff',
+              color: currentPage === 1 ? '#b0b8c1' : '#4e5968',
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              fontWeight: 500
+            }}
+          >
+            처음
+          </button>
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            style={{
+              padding: '6px 12px',
+              fontSize: '13px',
+              border: '1px solid #e5e8eb',
+              borderRadius: '6px',
+              backgroundColor: currentPage === 1 ? '#f2f2f2' : '#ffffff',
+              color: currentPage === 1 ? '#b0b8c1' : '#4e5968',
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              fontWeight: 500
+            }}
+          >
+            이전
+          </button>
+
+          {Array.from({ length: Math.ceil(totalCount / itemsPerPage) }, (_, i) => i + 1)
+            .slice(Math.max(0, currentPage - 3), Math.min(Math.ceil(totalCount / itemsPerPage), currentPage + 2))
+            .map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                style={{
+                  padding: '6px 10px',
+                  fontSize: '13px',
+                  border: page === currentPage ? '1px solid #3182f6' : '1px solid #e5e8eb',
+                  borderRadius: '6px',
+                  backgroundColor: page === currentPage ? '#3182f6' : '#ffffff',
+                  color: page === currentPage ? '#ffffff' : '#4e5968',
+                  cursor: 'pointer',
+                  fontWeight: page === currentPage ? 600 : 500
+                }}
+              >
+                {page}
+              </button>
+            ))}
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalCount / itemsPerPage)))}
+            disabled={currentPage === Math.ceil(totalCount / itemsPerPage)}
+            style={{
+              padding: '6px 12px',
+              fontSize: '13px',
+              border: '1px solid #e5e8eb',
+              borderRadius: '6px',
+              backgroundColor: currentPage === Math.ceil(totalCount / itemsPerPage) ? '#f2f2f2' : '#ffffff',
+              color: currentPage === Math.ceil(totalCount / itemsPerPage) ? '#b0b8c1' : '#4e5968',
+              cursor: currentPage === Math.ceil(totalCount / itemsPerPage) ? 'not-allowed' : 'pointer',
+              fontWeight: 500
+            }}
+          >
+            다음
+          </button>
+          <button
+            onClick={() => setCurrentPage(Math.ceil(totalCount / itemsPerPage))}
+            disabled={currentPage === Math.ceil(totalCount / itemsPerPage)}
+            style={{
+              padding: '6px 12px',
+              fontSize: '13px',
+              border: '1px solid #e5e8eb',
+              borderRadius: '6px',
+              backgroundColor: currentPage === Math.ceil(totalCount / itemsPerPage) ? '#f2f2f2' : '#ffffff',
+              color: currentPage === Math.ceil(totalCount / itemsPerPage) ? '#b0b8c1' : '#4e5968',
+              cursor: currentPage === Math.ceil(totalCount / itemsPerPage) ? 'not-allowed' : 'pointer',
+              fontWeight: 500
+            }}
+          >
+            끝
+          </button>
+
+          <span style={{
+            marginLeft: '16px',
+            fontSize: '13px',
+            color: '#8b95a1'
+          }}>
+            {currentPage} / {Math.ceil(totalCount / itemsPerPage)} 페이지 (총 {totalCount}건)
+          </span>
         </div>
       </div>
     </div>
