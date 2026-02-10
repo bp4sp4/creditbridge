@@ -212,18 +212,17 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             // 팝업 차단된 경우 새 탁으로 열기
             window.location.href = responseData.data.payurl;
           } else {
-            // 팝업 닫힘을 감지하고 부모 페이지 업데이트
-            const checkPopupClosed = setInterval(() => {
-              try {
-                if (paymentWindow.closed) {
-                  clearInterval(checkPopupClosed);
-                  // 팝업이 닫혔을 때 부모 페이지를 결제 완료 페이지로 이동
-                  window.location.href = '/?payment=success&step=3';
-                }
-              } catch (e) {
-                // 크로스도메인 에러 무시
+            // 팝업으로부터 메시지 수신 대기
+            const handleMessage = (event: MessageEvent) => {
+              if (event.data.type === 'payment_success') {
+                // 부모 페이지를 결제 완료 페이지로 이동
+                window.location.href = '/?payment=success&step=3';
+              } else if (event.data.type === 'payment_failed') {
+                // 부모 페이지를 결제 실패 페이지로 이동
+                window.location.href = `/?payment=failed&orderId=${event.data.orderId}&message=${encodeURIComponent(event.data.message)}`;
               }
-            }, 500);
+            };
+            window.addEventListener('message', handleMessage);
           }
         } else {
           throw new Error(responseData.error || '결제 요청 실패');
@@ -525,7 +524,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         {step === 3 && (
           <motion.div key="step3" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={styles.stepWrapper} style={{ textAlign: 'center', justifyContent: 'center' }}>
             <Image src="/complete-check.png" alt="완료" width={240} height={240} style={{ margin: '0 auto 24px' }} />
-            <h1 className={styles.title}>신청이 완료되었습니다!{"\n"}순차적으로 연락드리겠습니다.</h1>
+            <h1 className={styles.title}>결제가 완료되었습니다!</h1>
           </motion.div>
         )}
       </AnimatePresence>
