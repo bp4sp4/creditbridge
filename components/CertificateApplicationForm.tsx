@@ -209,8 +209,21 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           );
 
           if (!paymentWindow) {
-            // 팝업 차단된 경우 새 탭으로 열기
+            // 팝업 차단된 경우 새 탁으로 열기
             window.location.href = responseData.data.payurl;
+          } else {
+            // 팝업 닫힘을 감지하고 부모 페이지 업데이트
+            const checkPopupClosed = setInterval(() => {
+              try {
+                if (paymentWindow.closed) {
+                  clearInterval(checkPopupClosed);
+                  // 팝업이 닫혔을 때 부모 페이지를 결제 완료 페이지로 이동
+                  window.location.href = '/?payment=success&step=3';
+                }
+              } catch (e) {
+                // 크로스도메인 에러 무시
+              }
+            }, 500);
           }
         } else {
           throw new Error(responseData.error || '결제 요청 실패');
