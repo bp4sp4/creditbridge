@@ -322,18 +322,21 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
 
       // 결제 중 상태 확인 (중복 이동 방지)
       const isPaymentProcessing = sessionStorage.getItem('paymentProcessing') === 'true';
+      const hasProcessedPayment = sessionStorage.getItem('paymentProcessed') === 'true';
 
       // 결제 중이 아니고, step=3이 감지되었으면 결제 완료로 간주
-      if (stepParam === '3') {
+      if (stepParam === '3' && !hasProcessedPayment) {
         console.log('Setting step to 3 - Payment completed');
         sessionStorage.removeItem('paymentProcessing');
+        sessionStorage.setItem('paymentProcessed', 'true');
         setStep(3);
         setIsInitializing(false);
         // URL 파라미터 제거 (즉시)
         window.history.replaceState({}, '', '/');
-      } else if (paymentParam === 'failed') {
+      } else if (paymentParam === 'failed' && !hasProcessedPayment) {
         // 결제 실패 처리
         sessionStorage.removeItem('paymentProcessing');
+        sessionStorage.setItem('paymentProcessed', 'true');
         const orderId = params.get('orderId');
         const message = params.get('message');
         alert(`결제가 실패했습니다.\n${message || '다시 시도해주세요.'}`);
