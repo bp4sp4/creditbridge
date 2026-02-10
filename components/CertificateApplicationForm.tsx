@@ -212,18 +212,60 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             // 팝업 차단된 경우 새 탁으로 열기
             window.location.href = responseData.data.payurl;
           } else {
-            // 팝업이 닫힐 때까지 체크 (30초)
+            // 팝업이 결제를 완료한 후 닫힐 때까지 체크 (최대 60초)
             let checkCount = 0;
-            const maxChecks = 60; // 30초 (500ms * 60)
+            const maxChecks = 120; // 60초 (500ms * 120)
+            let popupClosing = false;
 
             const checkPopupClosed = setInterval(() => {
               checkCount++;
 
-              // 팝업이 닫혔거나 30초가 경과하면 부모 페이지 업데이트
-              if (paymentWindow.closed || checkCount >= maxChecks) {
-                clearInterval(checkPopupClosed);
-                // 부모 페이지를 결제 완료 페이지로 이동
-                window.location.href = '/?payment=success&step=3';
+              try {
+                // 팝업의 URL 확인 (팝업이 결제 완료 페이지로 이동했는지 확인)
+                if (paymentWindow && !paymentWindow.closed) {
+                  try {
+                    // 크로스도메인 체크 - 같은 도메인이면 URL 확인 가능
+                    const popupUrl = paymentWindow.location.href;
+                    if (popupUrl.includes('?payment=success') || popupUrl.includes('api/payments/result')) {
+                      // 결제 완료 페이지 도달 - 팝업 닫기 신호 전송
+                      if (!popupClosing) {
+                        popupClosing = true;
+                        console.log('Payment completed, closing popup');
+                        paymentWindow.close();
+                        // 약간의 딜레이 후 부모 페이지 이동
+                        setTimeout(() => {
+                          window.location.href = '/?payment=success&step=3';
+                        }, 1000);
+                      }
+                    }
+                  } catch (e) {
+                    // 크로스도메인 에러 - 시간 기반으로 체크
+                    if (checkCount >= 40) { // 약 20초 후
+                      if (!popupClosing) {
+                        popupClosing = true;
+                        console.log('Timeout reached, closing popup');
+                        paymentWindow.close();
+                        setTimeout(() => {
+                          window.location.href = '/?payment=success&step=3';
+                        }, 1000);
+                      }
+                    }
+                  }
+                } else if (paymentWindow && paymentWindow.closed) {
+                  // 팝업이 이미 닫혔으면 부모 페이지 이동
+                  clearInterval(checkPopupClosed);
+                  console.log('Popup already closed, navigating to step 3');
+                  window.location.href = '/?payment=success&step=3';
+                }
+
+                // 최대 시간 초과
+                if (checkCount >= maxChecks) {
+                  clearInterval(checkPopupClosed);
+                  console.log('Max checks reached, navigating to step 3');
+                  window.location.href = '/?payment=success&step=3';
+                }
+              } catch (err) {
+                console.error('Error checking popup:', err);
               }
             }, 500);
           }
