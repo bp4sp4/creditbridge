@@ -92,3 +92,46 @@
   padding: 100px;
   color: #8b95a1;
 }
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .table th {
+    padding: 12px 8px;
+    font-size: 12px;
+  }
+
+  .table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  /* 모바일에서는 번호판(결제번호)만 표시 */
+  .table th:not(:nth-child(1)):not(:nth-child(8)),
+  .table td:not(:nth-child(1)):not(:nth-child(8)) {
+    display: none;
+  }
+
+  /* 신청자와 결제번호 열만 보이기 */
+  .table th:nth-child(1),
+  .table td:nth-child(1) {
+    padding: 12px 8px;
+    min-width: 60px;
+  }
+
+  .table th:nth-child(8),
+  .table td:nth-child(8) {
+    padding: 12px 8px;
+    min-width: 150px;
+  }
+
+  .table td:nth-child(1) {
+    font-weight: 600;
+  }
+
+  .table td:nth-child(8) {
+    font-family: monospace;
+    font-size: 12px;
+    color: #6b7280;
+    word-break: break-all;
+  }
+}
