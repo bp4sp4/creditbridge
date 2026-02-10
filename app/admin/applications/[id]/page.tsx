@@ -174,7 +174,15 @@ export default function ApplicationDetailPage() {
               <div className={styles.grid}>
                 <div className={styles.field}>
                   <label>결제 상태</label>
-                  <p className={styles.paymentStatus(application.payment_status || '')}>
+                  <p style={{
+                    display: 'inline-block',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    backgroundColor: application.payment_status === 'paid' ? '#d1fae5' : application.payment_status === 'failed' ? '#fee2e2' : '#fef3c7',
+                    color: application.payment_status === 'paid' ? '#065f46' : application.payment_status === 'failed' ? '#991b1b' : '#92400e'
+                  }}>
                     {application.payment_status === 'paid'
                       ? '결제 완료'
                       : application.payment_status === 'failed'

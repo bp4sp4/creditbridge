@@ -118,29 +118,6 @@
   font-weight: 500;
 }
 
-.paymentStatus {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  display: inline-block;
-}
-
-.paymentStatus[class*='paid'] {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.paymentStatus[class*='failed'] {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.paymentStatus[class*='pending'],
-.paymentStatus[class*='waiting'] {
-  background: #fef3c7;
-  color: #92400e;
-}
 
 .photoLink {
   display: inline-block;
