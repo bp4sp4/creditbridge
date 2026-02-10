@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     // 주문 정보 조회
     const { data: order, error: orderError } = await supabase
-      .from('orders')
+      .from('certificate_applications')
       .select('*')
       .eq('order_id', orderId)
       .single();
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (order.status !== 'paid') {
+    if (order.payment_status !== 'paid') {
       return NextResponse.json(
         { error: '결제되지 않은 주문입니다.' },
         { status: 400 }
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     if (!cancelResult.success) {
       // 취소 실패 로그
       await supabase.from('payment_logs').insert({
-        order_id: order.id,
+        app_id: order.id,
         action: `cancel_${cancelType}_failed`,
         error_message: cancelResult.error,
       });
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     const { data: cancellation, error: insertError } = await supabase
       .from('payment_cancellations')
       .insert({
-        order_id: order.id,
+        app_id: order.id,
         mul_no: order.mul_no || '',
         cancel_type: cancelType,
         cancel_amount: cancelAmount || order.amount,
@@ -130,16 +130,16 @@ export async function POST(request: NextRequest) {
     // 주문 상태 업데이트
     const newStatus = cancelType === 'request' ? 'paid' : 'cancelled';
     await supabase
-      .from('orders')
+      .from('certificate_applications')
       .update({
-        status: newStatus,
+        payment_status: newStatus,
         cancelled_at: new Date().toISOString(),
       })
       .eq('id', order.id);
 
     // 취소 성공 로그
     await supabase.from('payment_logs').insert({
-      order_id: order.id,
+      app_id: order.id,
       action: `cancel_${cancelType}_success`,
       amount: cancelAmount || order.amount,
       response_data: cancelResult,
@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
 
     // 주문 정보 조회
     const { data: order } = await supabase
-      .from('orders')
+      .from('certificate_applications')
       .select('id')
       .eq('order_id', orderId)
       .single();
@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
     const { data: cancellations, error: selectError } = await supabase
       .from('payment_cancellations')
       .select('*')
-      .eq('order_id', order.id)
+      .eq('app_id', order.id)
       .order('created_at', { ascending: false });
 
     if (selectError) {

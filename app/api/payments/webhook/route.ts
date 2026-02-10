@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
       mul_no,
       orderId: var1,
       price,
-      paymethod
+      paymethod,
+      allParams: Object.fromEntries(params) // 모든 파라미터 로깅
     });
 
     // 데이터베이스에 결제 정보 저장
