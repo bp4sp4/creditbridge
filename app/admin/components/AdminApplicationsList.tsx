@@ -11,6 +11,8 @@ type Application = {
   contact: string;
   birth_prefix: string;
   address: string;
+  address_main?: string;
+  address_detail?: string;
   certificates: string[];
   cash_receipt: string;
   photo_url: string;
@@ -32,6 +34,9 @@ export default function AdminApplicationsList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAddress, setEditAddress] = useState('');
+  const [editAddressDetail, setEditAddressDetail] = useState('');
 
   // 로그아웃 함수
   const handleLogout = async () => {
@@ -39,6 +44,54 @@ export default function AdminApplicationsList() {
     await supabase.auth.signOut();
     sessionStorage.removeItem('adminLoginTime');
     router.push('/admin/login');
+  };
+
+  // 주소 편집 시작
+  const startEditingAddress = (app: Application) => {
+    setEditingId(app.id);
+    setEditAddress(app.address_main || app.address);
+    setEditAddressDetail(app.address_detail || '');
+  };
+
+  // 주소 업데이트
+  const updateAddress = async (appId: string) => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('certificate_applications')
+        .update({
+          address_main: editAddress,
+          address_detail: editAddressDetail,
+          address: `${editAddress} ${editAddressDetail}`
+        })
+        .eq('id', appId);
+
+      if (error) throw error;
+
+      // 로컬 상태 업데이트
+      setApplications(applications.map(app =>
+        app.id === appId
+          ? {
+              ...app,
+              address_main: editAddress,
+              address_detail: editAddressDetail,
+              address: `${editAddress} ${editAddressDetail}`
+            }
+          : app
+      ));
+
+      setEditingId(null);
+      alert('주소가 업데이트되었습니다.');
+    } catch (error: any) {
+      alert('주소 업데이트 실패: ' + error.message);
+    }
+  };
+
+  // 주소 편집 취소
+  const cancelEditingAddress = () => {
+    setEditingId(null);
+    setEditAddress('');
+    setEditAddressDetail('');
   };
 
   // 24시간 자동 로그아웃
@@ -170,9 +223,91 @@ export default function AdminApplicationsList() {
                     </div>
                   </td>
                   <td>
-                    <div style={{ fontSize: '14px', width: '200px', lineHeight: 1.4 }}>
-                      {app.address}
-                    </div>
+                    {editingId === app.id ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '300px' }}>
+                        <input
+                          type="text"
+                          value={editAddress}
+                          onChange={(e) => setEditAddress(e.target.value)}
+                          placeholder="기본 주소"
+                          style={{
+                            padding: '8px',
+                            border: '1px solid #e5e8eb',
+                            borderRadius: '4px',
+                            fontSize: '13px'
+                          }}
+                        />
+                        <input
+                          type="text"
+                          value={editAddressDetail}
+                          onChange={(e) => setEditAddressDetail(e.target.value)}
+                          placeholder="상세 주소"
+                          style={{
+                            padding: '8px',
+                            border: '1px solid #e5e8eb',
+                            borderRadius: '4px',
+                            fontSize: '13px'
+                          }}
+                        />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => updateAddress(app.id)}
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: '#3b82f6',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: 500
+                            }}
+                          >
+                            저장
+                          </button>
+                          <button
+                            onClick={cancelEditingAddress}
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: '#e5e8eb',
+                              color: '#6b7280',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: 500
+                            }}
+                          >
+                            취소
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => startEditingAddress(app)}
+                        style={{
+                          fontSize: '14px',
+                          width: '200px',
+                          lineHeight: 1.4,
+                          cursor: 'pointer',
+                          padding: '8px',
+                          borderRadius: '4px',
+                          backgroundColor: '#f9fafb',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f3f4f6';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f9fafb';
+                        }}
+                      >
+                        {app.address}
+                        <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+                          (클릭하여 수정)
+                        </div>
+                      </div>
+                    )}
                   </td>
                   <td>
                     <div style={{
