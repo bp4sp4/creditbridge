@@ -427,14 +427,23 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 <input
                   type="text"
                   className={styles.inputField}
+                  style={{
+                    borderColor: formData.contact && !isPhoneValid ? '#ef4444' : undefined,
+                    backgroundColor: formData.contact && !isPhoneValid ? '#fee2e2' : undefined
+                  }}
                   value={formData.contact}
                   onChange={(e) => setFormData({ ...formData, contact: formatPhoneNumber(e.target.value) })}
                   placeholder="010-0000-0000"
                   maxLength={13}
                 />
+                {formData.contact && !isPhoneValid && (
+                  <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>
+                    010-XXXX-XXXX 형식으로 입력해주세요
+                  </p>
+                )}
               </div>
             )}
-            {formData.name && formData.contact && (
+            {formData.name && formData.contact && isPhoneValid && (
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>
                   생년월일
@@ -442,27 +451,32 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 </label>
                 <input
                   type="text"
-                  maxLength={10}
+                  maxLength={6}
                   className={styles.inputField}
+                  style={{
+                    borderColor: formData.birth_prefix && formData.birth_prefix.length !== 6 ? '#fbbf24' : undefined,
+                    backgroundColor: formData.birth_prefix && formData.birth_prefix.length !== 6 ? '#fef3c7' : undefined
+                  }}
                   value={formData.birth_prefix}
                   onChange={(e) => {
-                    const formatted = e.target.value.replace(/[^0-9-]/g, '');
-                    let result = '';
-                    const numbers = formatted.replace(/-/g, '');
-                    if (numbers.length <= 4) {
-                      result = numbers;
-                    } else if (numbers.length <= 6) {
-                      result = `${numbers.slice(0, 4)}-${numbers.slice(4)}`;
-                    } else {
-                      result = `${numbers.slice(0, 4)}-${numbers.slice(4, 6)}-${numbers.slice(6, 8)}`;
-                    }
-                    setFormData({ ...formData, birth_prefix: numbers.slice(0, 6) });
+                    const numbers = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+                    setFormData({ ...formData, birth_prefix: numbers });
                   }}
-                  placeholder="1998-10-27"
+                  placeholder="981027"
                 />
+                {formData.birth_prefix && formData.birth_prefix.length !== 6 && (
+                  <p style={{ color: '#b45309', fontSize: '12px', marginTop: '4px' }}>
+                    6자리 숫자를 입력해주세요 (예: 981027)
+                  </p>
+                )}
+                {formData.birth_prefix && formData.birth_prefix.length === 6 && (
+                  <p style={{ color: '#16a34a', fontSize: '12px', marginTop: '4px' }}>
+                    ✓ 올바른 형식입니다
+                  </p>
+                )}
               </div>
             )}
-            {formData.name && formData.contact && formData.birth_prefix.length === 6 && (
+            {formData.name && isPhoneValid && formData.birth_prefix.length === 6 && (
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>
                   자격증 수령 주소
