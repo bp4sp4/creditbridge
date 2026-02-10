@@ -180,47 +180,31 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
 
       if (insertError) throw insertError;
 
-      // PayApp REST API로 직접 결제 요청 (lite.payapp.kr/pay 페이지 건너뛰기)
-      const payappUserId = process.env.NEXT_PUBLIC_PAYAPP_USER_ID || 'korhrdcorp';
-      const payappShopName = process.env.NEXT_PUBLIC_PAYAPP_SHOP_NAME || '한평생교육';
-
-      const paymentParams = new URLSearchParams({
-        cmd: 'payrequest',
-        userid: payappUserId,
-        shopname: payappShopName,
-        goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
-        price: (formData.certificates.length * 100000).toString(),
-        recvphone: formData.contact,
-        memo: formData.name,
-        feedbackurl: `${window.location.origin}/api/payments/webhook`,
-        returnurl: `${window.location.origin}/?payment=success&step=3`,
-        var1: orderId,
-        skip_cstpage: 'y', // 매출전표 페이지 스킵 - returnurl로 POST 이동
-        smsuse: 'n', // 결제요청 SMS 발송 안함
-      });
-
+      // 서버 엔드포인트로 PayApp 결제 요청 (CORS 우회)
       try {
-        const paymentResponse = await fetch('https://api.payapp.kr/oapi/apiLoad.html', {
+        const paymentResponse = await fetch('/api/payments', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
-          body: paymentParams.toString(),
+          body: JSON.stringify({
+            orderId,
+            goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
+            price: formData.certificates.length * 100000,
+            recvphone: formData.contact,
+            recvname: formData.name,
+            var1: orderId,
+          }),
         });
 
-        const responseText = await paymentResponse.text();
-        const responseParams = new URLSearchParams(responseText);
-        const state = responseParams.get('state');
-        const payurl = responseParams.get('payurl');
-
+        const responseData = await paymentResponse.json();
         setLoading(false);
 
-        if (state === '1' && payurl) {
+        if (responseData.success && responseData.data?.payurl) {
           // 결제창 URL로 직접 이동 (lite.payapp.kr/pay 페이지 건너뜀)
-          window.location.href = payurl;
+          window.location.href = responseData.data.payurl;
         } else {
-          const errorMessage = responseParams.get('errorMessage') || '결제 요청 실패';
-          throw new Error(errorMessage);
+          throw new Error(responseData.error || '결제 요청 실패');
         }
       } catch (err: any) {
         setLoading(false);
