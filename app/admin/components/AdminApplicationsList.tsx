@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '../../../lib/supabase/client';
 import styles from './admin.module.css';
 import DetailModal from './DetailModal';
+import NewApplicationModal from './NewApplicationModal';
 
 type Application = {
   id: string;
@@ -37,6 +38,7 @@ export default function AdminApplicationsList() {
   const [totalCount, setTotalCount] = useState(0);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const itemsPerPage = 10;
 
   // 로그아웃 함수
@@ -130,7 +132,7 @@ export default function AdminApplicationsList() {
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
-            onClick={() => router.push('/admin/applications/new')}
+            onClick={() => setIsNewModalOpen(true)}
             style={{
               padding: '10px 16px',
               fontSize: '14px',
@@ -379,6 +381,13 @@ export default function AdminApplicationsList() {
           onRefresh={refreshData}
         />
       )}
+
+      {/* 새 신청 모달 */}
+      <NewApplicationModal
+        isOpen={isNewModalOpen}
+        onClose={() => setIsNewModalOpen(false)}
+        onRefresh={refreshData}
+      />
     </div>
   );
 }
