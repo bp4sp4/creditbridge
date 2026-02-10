@@ -180,80 +180,52 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
 
       if (insertError) throw insertError;
 
-      // PayApp JS API 로드
-      const script = document.createElement('script');
-      script.src = 'https://lite.payapp.kr/public/api/v2/payapp-lite.js';
-      script.async = true;
-      script.onload = () => {
-        // PayApp JS SDK가 로드된 후 결제 요청
-        const payappUserId = process.env.NEXT_PUBLIC_PAYAPP_USER_ID || 'korhrdcorp';
-        const payappShopName = process.env.NEXT_PUBLIC_PAYAPP_SHOP_NAME || '한평생교육';
+      // PayApp REST API로 직접 결제 요청 (lite.payapp.kr/pay 페이지 건너뛰기)
+      const payappUserId = process.env.NEXT_PUBLIC_PAYAPP_USER_ID || 'korhrdcorp';
+      const payappShopName = process.env.NEXT_PUBLIC_PAYAPP_SHOP_NAME || '한평생교육';
 
-        // window.PayApp이 정의될 때까지 대기
-        const waitForPayApp = setInterval(() => {
-          if ((window as any).PayApp) {
-            clearInterval(waitForPayApp);
+      const paymentParams = new URLSearchParams({
+        cmd: 'payrequest',
+        userid: payappUserId,
+        shopname: payappShopName,
+        goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
+        price: (formData.certificates.length * 100000).toString(),
+        recvphone: formData.contact,
+        memo: formData.name,
+        feedbackurl: `${window.location.origin}/api/payments/webhook`,
+        returnurl: `${window.location.origin}/?payment=success&step=3`,
+        var1: orderId,
+        skip_cstpage: 'y', // 매출전표 페이지 스킵 - returnurl로 POST 이동
+        smsuse: 'n', // 결제요청 SMS 발송 안함
+      });
 
-            // PayApp 파라미터 설정 (고정값)
-            (window as any).PayApp.setDefault('userid', payappUserId);
-            (window as any).PayApp.setDefault('shopname', payappShopName);
-            (window as any).PayApp.setDefault('feedbackurl', `${window.location.origin}/api/payments/webhook`);
+      try {
+        const paymentResponse = await fetch('https://api.payapp.kr/oapi/apiLoad.html', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: paymentParams.toString(),
+        });
 
-            // 팝업 창으로 결제창 열기
-            const paymentWindow = window.open('', 'payapp_payment', 'width=500,height=700,scrollbars=yes');
+        const responseText = await paymentResponse.text();
+        const responseParams = new URLSearchParams(responseText);
+        const state = responseParams.get('state');
+        const payurl = responseParams.get('payurl');
 
-            // 결제 요청 - 팝업 창으로 이동
-            (window as any).PayApp.setTarget('payapp_payment');
-            (window as any).PayApp.payrequest({
-              goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
-              price: amount.toString(),
-              recvphone: formData.contact,
-              recvname: formData.name,
-              var1: orderId,
-              returnurl: `${window.location.origin}/?payment=success&step=3`,
-            });
+        setLoading(false);
 
-            setLoading(false);
-
-            // 팝업 완료 감지 - 부모 페이지가 Step 3으로 이동하면 팝업 자동 닫기
-            let checkCount = 0;
-            const checkInterval = setInterval(() => {
-              checkCount++;
-              try {
-                const params = new URLSearchParams(window.location.search);
-                if (params.get('step') === '3') {
-                  // 부모 페이지가 Step 3으로 이동했으면 팝업 닫기
-                  if (paymentWindow && !paymentWindow.closed) {
-                    paymentWindow.close();
-                  }
-                  clearInterval(checkInterval);
-                }
-              } catch (err) {
-                console.error('Payment completion check error:', err);
-              }
-
-              // 5분 초과 시 중지
-              if (checkCount >= 300) {
-                clearInterval(checkInterval);
-              }
-            }, 1000);
-          }
-        }, 100);
-
-        // 5초 타임아웃
-        setTimeout(() => {
-          clearInterval(waitForPayApp);
-          if (!(window as any).PayApp) {
-            throw new Error('PayApp SDK 로드 실패');
-          }
-        }, 5000);
-      };
-
-      script.onerror = () => {
-        throw new Error('PayApp SDK 로드 실패');
-      };
-
-      document.head.appendChild(script);
+        if (state === '1' && payurl) {
+          // 결제창 URL로 직접 이동 (lite.payapp.kr/pay 페이지 건너뜀)
+          window.location.href = payurl;
+        } else {
+          const errorMessage = responseParams.get('errorMessage') || '결제 요청 실패';
+          throw new Error(errorMessage);
+        }
+      } catch (err: any) {
+        setLoading(false);
+        throw new Error(`결제 요청 실패: ${err.message}`);
+      }
 
     } catch (err: any) {
       alert('오류가 발생했습니다: ' + err.message);
