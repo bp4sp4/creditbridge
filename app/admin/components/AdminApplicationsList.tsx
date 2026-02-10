@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../../lib/supabase/client';
-import styles from './admin.module.css'; // 위 CSS 파일 임포트
+import styles from './admin.module.css';
+import DetailModal from './DetailModal';
 
 type Application = {
   id: string;
@@ -15,7 +16,7 @@ type Application = {
   cash_receipt: string;
   photo_url: string;
   created_at: string;
-  click_source?: string; // 추가된 유입경로
+  click_source?: string;
   order_id?: string;
   amount?: number;
   payment_status?: string;
@@ -23,6 +24,9 @@ type Application = {
   trade_id?: string;
   mul_no?: string;
   pay_method?: string;
+  addressMain?: string;
+  addressDetail?: string;
+  postalCode?: string;
 };
 
 export default function AdminApplicationsList() {
@@ -31,6 +35,8 @@ export default function AdminApplicationsList() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const itemsPerPage = 10;
 
   // 로그아웃 함수
@@ -47,21 +53,17 @@ export default function AdminApplicationsList() {
     const loginTime = sessionStorage.getItem('adminLoginTime');
 
     if (!loginTime) {
-      // 로그인 시간이 없으면 현재 시간 저장
       sessionStorage.setItem('adminLoginTime', Date.now().toString());
     } else {
-      // 24시간 경과 확인
       const now = Date.now();
       const elapsed = now - parseInt(loginTime);
-      const oneDay = 24 * 60 * 60 * 1000; // 24시간을 밀리초로
+      const oneDay = 24 * 60 * 60 * 1000;
 
       if (elapsed > oneDay) {
-        // 24시간 경과했으면 로그아웃
         handleLogout();
         return;
       }
 
-      // 남은 시간만큼 타이머 설정
       const remainingTime = oneDay - elapsed;
       const logoutTimer = setTimeout(() => {
         handleLogout();
@@ -71,7 +73,7 @@ export default function AdminApplicationsList() {
     }
   }, []);
 
-  // 데이터 조회 useEffect
+  // 데이터 조회
   useEffect(() => {
     const supabase = createClient();
     async function fetchApplications() {
@@ -79,12 +81,10 @@ export default function AdminApplicationsList() {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
 
-      // 전체 개수 조회
       const { count } = await supabase
         .from('certificate_applications')
         .select('*', { count: 'exact', head: true });
 
-      // 페이지별 데이터 조회
       const { data, error } = await supabase
         .from('certificate_applications')
         .select('*')
@@ -99,6 +99,23 @@ export default function AdminApplicationsList() {
     }
     fetchApplications();
   }, [currentPage]);
+
+  // 모달 열기
+  const openModal = (app: Application) => {
+    setSelectedApp(app);
+    setIsModalOpen(true);
+  };
+
+  // 모달 닫기
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedApp(null);
+  };
+
+  // 데이터 새로고침
+  const refreshData = () => {
+    setCurrentPage(1);
+  };
 
   if (loading) return <div className={styles.loading}>데이터를 불러오고 있습니다...</div>;
 
@@ -178,7 +195,7 @@ export default function AdminApplicationsList() {
             </thead>
             <tbody>
               {applications.map((app) => (
-                <tr key={app.id} onClick={() => router.push(`/admin/applications/${app.id}`)} style={{ cursor: 'pointer' }}>
+                <tr key={app.id} onClick={() => openModal(app)} style={{ cursor: 'pointer' }}>
                   <td>
                     <div style={{ fontWeight: 600, color: '#191f28' }}>{app.name}</div>
                   </td>
@@ -234,6 +251,7 @@ export default function AdminApplicationsList() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className={styles.photoLink}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         보기
                       </a>
@@ -333,6 +351,7 @@ export default function AdminApplicationsList() {
           >
             다음
           </button>
+
           <button
             onClick={() => setCurrentPage(Math.ceil(totalCount / itemsPerPage))}
             disabled={currentPage === Math.ceil(totalCount / itemsPerPage)}
@@ -347,18 +366,19 @@ export default function AdminApplicationsList() {
               fontWeight: 500
             }}
           >
-            끝
+            마지막
           </button>
-
-          <span style={{
-            marginLeft: '16px',
-            fontSize: '13px',
-            color: '#8b95a1'
-          }}>
-            {currentPage} / {Math.ceil(totalCount / itemsPerPage)} 페이지 (총 {totalCount}건)
-          </span>
         </div>
       </div>
+
+      {/* 상세 모달 */}
+      {isModalOpen && selectedApp && (
+        <DetailModal
+          application={selectedApp}
+          onClose={closeModal}
+          onRefresh={refreshData}
+        />
+      )}
     </div>
   );
 }
