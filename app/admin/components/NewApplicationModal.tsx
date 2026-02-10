@@ -54,7 +54,8 @@ type NewApplicationModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onRefresh: () => void;
-  onAdd?: (data: NewApplication & { id: string; created_at: string }) => void;
+  // accept a broader shape to remain compatible with admin list handler
+  onAdd?: (data: any) => void;
 };
 
 export default function NewApplicationModal({ isOpen, onClose, onRefresh, onAdd }: NewApplicationModalProps) {
@@ -149,11 +150,13 @@ export default function NewApplicationModal({ isOpen, onClose, onRefresh, onAdd 
         if (onAdd && error === null) {
           const newData = {
             ...formData,
+            // 합쳐진 전체 주소 필드 추가 (관리자 리스트에서 `address` 사용)
+            address: `${formData.address_main} ${formData.address_detail}`.trim(),
             photo_url: photoUrl,
             id: new Date().getTime().toString(), // 임시 ID (실제로는 서버에서 반환)
             created_at: new Date().toISOString(),
           };
-          onAdd(newData as NewApplication & { id: string; created_at: string });
+          onAdd(newData as NewApplication & { id: string; created_at: string } & { address: string });
         }
         setFormData({
           name: '',
