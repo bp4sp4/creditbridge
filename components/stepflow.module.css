@@ -21,6 +21,11 @@
   text-align: center;
   background: #fff;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
 }
 
 .infoNumber {
@@ -47,9 +52,11 @@ line-height: 19.2px; /* 120% */
 
 
 .infoInner {
+  width: 100%;
   
   margin: 0 auto;
   text-align: left;
+  
 }
 .infoItem {
   margin-bottom: 16px;
@@ -139,11 +146,13 @@ background: var(--Atomic-Mono-100, #F2F2F2);
   
   .stepWrapper {
     padding: 16px;
+    
     flex: 1;
     display: flex;
     flex-direction: column;
     border-left: 1px solid #e5e5e5;
     border-right: 1px solid #e5e5e5;
+    overflow-y: auto;
   }
   
   /* 이미지 스타일 */
@@ -216,13 +225,11 @@ background: var(--Atomic-Mono-100, #F2F2F2);
     cursor: pointer;
     accent-color: var(--Blue-500);
   }
+
+
   
   /* 버튼 */
   .bottomButton {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
     width: 100%;
     max-width: 328px;
     height: 56px;
@@ -234,7 +241,7 @@ background: var(--Atomic-Mono-100, #F2F2F2);
     font-weight: 700;
     cursor: pointer;
     transition: background-color 0.2s;
-    
+    margin-bottom: 24px;
   }
 
   

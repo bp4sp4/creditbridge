@@ -45,6 +45,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showCertModal, setShowCertModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
 
@@ -153,24 +154,58 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         photo_url = data?.path;
       }
 
-      const { error: insertError } = await supabase
+      // 결제 금액 계산 (자격증 개수 * 100,000원)
+      const amount = formData.certificates.length * 100000;
+      const orderId = `CERT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // 자격증 신청 + 결제 정보 함께 저장
+      const { data: applicationData, error: insertError } = await supabase
         .from('certificate_applications')
         .insert([{
           name: formData.name,
           contact: formData.contact,
           birth_prefix: formData.birth_prefix,
           address: formData.address,
+          address_main: formData.addressMain,
+          address_detail: formData.addressDetail,
           certificates: formData.certificates,
           cash_receipt: formData.cash_receipt,
           photo_url,
-
-        }]);
+          order_id: orderId,
+          amount: amount,
+          payment_status: 'pending'
+        }])
+        .select()
+        .single();
 
       if (insertError) throw insertError;
-      setStep(3);
+
+      // PayApp 결제 페이지로 직접 이동
+      const payappUserId = process.env.NEXT_PUBLIC_PAYAPP_USER_ID || 'korhrdcorp';
+      const payappShopName = process.env.NEXT_PUBLIC_PAYAPP_SHOP_NAME || '한평생교육';
+      const payappLinkKey = process.env.NEXT_PUBLIC_PAYAPP_LINK_KEY || '';
+
+      // PayApp 결제 URL 생성
+      const payappParams = new URLSearchParams({
+        userid: payappUserId,
+        linkkey: payappLinkKey || '',
+        shopname: payappShopName,
+        goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
+        price: amount.toString(),
+        recvphone: formData.contact,
+        recvname: formData.name,
+        var1: orderId,
+        returnurl: `${window.location.origin}/api/payments/result`,
+        feedbackurl: `${window.location.origin}/api/payments/webhook`
+      });
+
+      const paymentUrl = `https://api.payapp.kr/order/order_pay.php?${payappParams.toString()}`;
+
+      // PayApp 결제 페이지로 리다이렉트
+      window.location.href = paymentUrl;
+
     } catch (err: any) {
       alert('오류가 발생했습니다: ' + err.message);
-    } finally {
       setLoading(false);
     }
   };
@@ -178,7 +213,18 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   // 연락처 유효성 검사 (010-XXXX-XXXX 형식)
   const isPhoneValid = /^01[0-9]-\d{3,4}-\d{4}$/.test(formData.contact);
 
-  const isFormValid = formData.name && isPhoneValid && formData.birth_prefix.length === 6 && formData.certificates.length > 0 && privacyAgreed;
+  const isFormValid = formData.name && isPhoneValid && formData.birth_prefix.length === 6 && formData.addressMain && formData.certificates.length > 0 && privacyAgreed;
+
+  // 결제 완료 후 URL 파라미터에서 step 감지
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const stepParam = params.get('step');
+    if (stepParam === '3' && step !== 3) {
+      setStep(3);
+      // URL 파라미터 제거
+      window.history.replaceState({}, '', '/');
+    }
+  }
 
   return (
     <div className={styles.container}>
@@ -200,13 +246,12 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               
               </div>
               <button className={styles.bottomButton} onClick={() => setStep(2)}>다음</button>
-
             </div>
           </motion.div>
         )}
 
         {step === 2 && (
-          <motion.div key="step2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={styles.stepWrapper}>
+          <motion.div key="step2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={styles.stepWrapper} style={{ display: 'flex', flexDirection: 'column' }}>
             {/* 프로그레스바 */}
             <div className={styles.progressContainer}>
               <div className={styles.progressLabel}>
@@ -221,7 +266,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         (formData.name ? 1 : 0) +
                         (formData.contact && isPhoneValid ? 1 : 0) +
                         (formData.birth_prefix.length === 6 ? 1 : 0) +
-                        (formData.addressMain && formData.addressDetail ? 1 : 0) +
+                        (formData.addressMain ? 1 : 0) +
                         (formData.certificates.length > 0 ? 1 : 0) +
                         (privacyAgreed ? 1 : 0)
                       ) / 6 * 100,
@@ -236,7 +281,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     (formData.name ? 1 : 0) +
                     (formData.contact && isPhoneValid ? 1 : 0) +
                     (formData.birth_prefix.length === 6 ? 1 : 0) +
-                    (formData.addressMain && formData.addressDetail ? 1 : 0) +
+                    (formData.addressMain ? 1 : 0) +
                     (formData.certificates.length > 0 ? 1 : 0) +
                     (privacyAgreed ? 1 : 0)
                   ) / 6 * 100
@@ -348,7 +393,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 )}
               </div>
             )}
-            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.addressDetail && (
+            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && (
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>
                   자격증 선택
@@ -371,7 +416,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 </div>
               </div>
             )}
-            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.addressDetail && formData.certificates.length > 0 && (
+            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.certificates.length > 0 && (
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>증명사진 첨부 (선택)</label>
                 <input
@@ -391,7 +436,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 )}
               </div>
             )}
-            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.addressDetail && formData.certificates.length > 0 && (
+            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.certificates.length > 0 && (
               <div className={styles.inputGroup} style={{ marginTop: '20px' }}>
                 <label className={styles.checkboxLabel}>
                   <input
@@ -401,12 +446,12 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     className={styles.checkbox}
                   />
                   <span>
-                    <button type="button" className={styles.privacyLink}>개인정보처리방침</button> 동의
+                    <button type="button" className={styles.privacyLink} onClick={() => setShowPrivacyModal(true)}>개인정보처리방침</button> 동의
                   </span>
                 </label>
               </div>
             )}
-            <div style={{ display: 'flex', gap: 12, marginTop: 32 }}>
+            <div style={{ display: 'flex', gap: 12, marginTop: 'auto', paddingTop: 32, justifyContent: 'center' }}>
               <button
                 className={styles.bottomButton}
                 disabled={
@@ -414,14 +459,13 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                   !isPhoneValid ||
                   formData.birth_prefix.length !== 6 ||
                   !formData.addressMain ||
-                  !formData.addressDetail ||
                   formData.certificates.length === 0 ||
                   !privacyAgreed ||
                   loading
                 }
                 onClick={handleSubmit}
               >
-                {loading ? '처리 중...' : '신청하기'}
+                {loading ? '처리 중...' : '결제하기'}
               </button>
             </div>
           </motion.div>
@@ -534,6 +578,47 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               <button className={styles.certModalConfirmButton} onClick={() => setShowCertModal(false)}>
                 선택하기
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 개인정보처리방침 모달 */}
+      {showPrivacyModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowPrivacyModal(false)}>
+          <div className={styles.modalPrivacy} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalPrivacyHeader}>
+              <h3 className={styles.modalPrivacyTitle}>개인정보처리방침</h3>
+              <button className={styles.modalCloseButton} onClick={() => setShowPrivacyModal(false)}>✕</button>
+            </div>
+            <div className={styles.modalPrivacyContent}>
+              <div className={styles.modalPrivacyScroll}>
+                <p className={styles.modalPrivacyItem}>
+                  <strong>1. 개인정보 수집 및 이용 목적</strong>
+                  <br />
+                  사회복지사 자격 취득 상담 진행, 문의사항 응대
+                  <br />
+                  개인정보는 상담 서비스 제공을 위한 목적으로만
+                  수집 및 이용되며, 동의 없이 제3자에게 제공되지 않습니다
+                </p>
+                <p className={styles.modalPrivacyItem}>
+                  <strong>2. 수집 및 이용하는 개인정보 항목</strong>
+                  <br />
+                  필수 - 이름, 연락처(휴대전화번호), 최종학력, 취득사유
+                </p>
+                <p className={styles.modalPrivacyItem}>
+                  <strong>3. 보유 및 이용 기간</strong>
+                  <br />
+                  법령이 정하는 경우를 제외하고는 수집일로부터 1년 또는 동의
+                  철회 시까지 보유 및 이용합니다.
+                </p>
+                <p className={styles.modalPrivacyItem}>
+                  <strong>4. 동의 거부 권리</strong>
+                  <br />
+                  신청자는 동의를 거부할 권리가 있습니다. 단, 동의를 거부하는
+                  경우 상담 서비스 이용이 제한됩니다.
+                </p>
+              </div>
             </div>
           </div>
         </div>
