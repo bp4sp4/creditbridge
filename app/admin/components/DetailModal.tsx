@@ -711,7 +711,7 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
                     <input
                       type="date"
                       value={formData.paid_at ? formData.paid_at.split('T')[0] : ''}
-                      onChange={(e) => setFormData({ ...formData, paid_at: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                      onChange={(e) => setFormData({ ...formData, paid_at: e.target.value ? new Date(e.target.value).toISOString() : undefined })}
                       style={{
                         width: '100%',
                         padding: '12px',
