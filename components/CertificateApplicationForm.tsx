@@ -225,23 +225,33 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   // 결제 완료 후 URL 파라미터에서 step 감지
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const stepParam = params.get('step');
-      const paymentParam = params.get('payment');
+      // 약간의 딜레이를 주어 URL이 완전히 로드된 후 읽기
+      const timer = setTimeout(() => {
+        const params = new URLSearchParams(window.location.search);
+        const stepParam = params.get('step');
+        const paymentParam = params.get('payment');
 
-      if (stepParam === '3') {
-        setStep(3);
-        // URL 파라미터 제거
-        window.history.replaceState({}, '', '/');
-      }
+        console.log('URL params detected:', { stepParam, paymentParam, search: window.location.search });
 
-      // 결제 실패 처리
-      if (paymentParam === 'failed') {
-        const orderId = params.get('orderId');
-        const message = params.get('message');
-        alert(`결제가 실패했습니다.\n${message || '다시 시도해주세요.'}`);
-        window.history.replaceState({}, '', '/');
-      }
+        if (stepParam === '3') {
+          console.log('Setting step to 3');
+          setStep(3);
+          // URL 파라미터 제거 (약간의 딜레이 후)
+          setTimeout(() => {
+            window.history.replaceState({}, '', '/');
+          }, 500);
+        }
+
+        // 결제 실패 처리
+        if (paymentParam === 'failed') {
+          const orderId = params.get('orderId');
+          const message = params.get('message');
+          alert(`결제가 실패했습니다.\n${message || '다시 시도해주세요.'}`);
+          window.history.replaceState({}, '', '/');
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, []);
 
