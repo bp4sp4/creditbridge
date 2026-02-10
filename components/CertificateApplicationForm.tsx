@@ -198,9 +198,12 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             (window as any).PayApp.setDefault('userid', payappUserId);
             (window as any).PayApp.setDefault('shopname', payappShopName);
             (window as any).PayApp.setDefault('feedbackurl', `${window.location.origin}/api/payments/webhook`);
-            (window as any).PayApp.setDefault('redirectpay', '1'); // 결제창으로 바로 이동
 
-            // 결제 요청 - 바로 결제 페이지로 이동
+            // 팝업 창으로 결제창 열기
+            const paymentWindow = window.open('', 'payapp_payment', 'width=500,height=700,scrollbars=yes');
+
+            // 결제 요청 - 팝업 창으로 이동
+            (window as any).PayApp.setTarget('payapp_payment');
             (window as any).PayApp.payrequest({
               goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
               price: amount.toString(),
@@ -208,10 +211,32 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               recvname: formData.name,
               var1: orderId,
               returnurl: `${window.location.origin}/?payment=success&step=3`,
-              redirectpay: '1' // 리다이렉트 페이지 없이 바로 결제 페이지로 이동
             });
 
             setLoading(false);
+
+            // 팝업 완료 감지 - 부모 페이지가 Step 3으로 이동하면 팝업 자동 닫기
+            let checkCount = 0;
+            const checkInterval = setInterval(() => {
+              checkCount++;
+              try {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('step') === '3') {
+                  // 부모 페이지가 Step 3으로 이동했으면 팝업 닫기
+                  if (paymentWindow && !paymentWindow.closed) {
+                    paymentWindow.close();
+                  }
+                  clearInterval(checkInterval);
+                }
+              } catch (err) {
+                console.error('Payment completion check error:', err);
+              }
+
+              // 5분 초과 시 중지
+              if (checkCount >= 300) {
+                clearInterval(checkInterval);
+              }
+            }, 1000);
           }
         }, 100);
 
