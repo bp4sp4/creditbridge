@@ -49,6 +49,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [photoUploadChoice, setPhotoUploadChoice] = useState<'yes' | 'no'>('no');
 
   // 전체 선택 함수
   const handleSelectAll = () => {
@@ -414,6 +415,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         (formData.name ? 1 : 0) +
                         (formData.contact && isPhoneValid ? 1 : 0) +
                         (formData.birth_prefix.length === 6 ? 1 : 0) +
+                        (formData.addressMain ? 1 : 0) +
                         (formData.certificates.length > 0 ? 1 : 0) +
                         (privacyAgreed ? 1 : 0)
                       ) / 6 * 100,
@@ -578,34 +580,60 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             )}
             {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.certificates.length > 0 && (
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>증명사진 첨부 (선택 사항)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className={styles.inputField}
-                  onChange={(e) => setFormData({ ...formData, photo: e.target.files?.[0] || null })}
-                  style={{
-                    
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    color: formData.photo ? '#4e5968' : '#9ca3af',
-                    fontSize: '14px',
-                    fontWeight: formData.photo ? '500' : '400'
-                  }}
-                />
-      
-                {formData.photo && (
-                  <div style={{ marginTop: 16, textAlign: 'center' }}>
-                    <img
-                      src={URL.createObjectURL(formData.photo)}
-                      alt="미리보기"
-                      style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 12, border: '1.5px solid #e5e8eb', boxShadow: '0 2px 8px 0 rgba(0,0,0,0.04)' }}
+                <label className={styles.inputLabel}>증명사진 첨부 여부<span className={styles.optionalNote}>(*미첨부 시 사진란 공란, 효력 영향 없음)</span></label>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <input
+                      type="radio"
+                      name="photoUpload"
+                      checked={photoUploadChoice === 'yes'}
+                      onChange={() => { setPhotoUploadChoice('yes'); }}
                     />
-           
-                  </div>
+                    예
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <input
+                      type="radio"
+                      name="photoUpload"
+                      checked={photoUploadChoice === 'no'}
+                      onChange={() => {
+                        setPhotoUploadChoice('no');
+                        setFormData({ ...formData, photo: null });
+                      }}
+                    />
+                    아니요
+                  </label>
+                </div>
+                {photoUploadChoice === 'yes' && (
+                  <>
+                    <label className={styles.inputLabel}>증명사진 첨부</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className={styles.inputField}
+                      onChange={(e) => setFormData({ ...formData, photo: e.target.files?.[0] || null })}
+                      style={{
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        color: formData.photo ? '#4e5968' : '#9ca3af',
+                        fontSize: '14px',
+                        fontWeight: formData.photo ? '500' : '400'
+                      }}
+                    />
+                    {formData.photo && (
+                      <div style={{ marginTop: 16, textAlign: 'center' }}>
+                        <img
+                          src={URL.createObjectURL(formData.photo)}
+                          alt="미리보기"
+                          style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 12, border: '1.5px solid #e5e8eb', boxShadow: '0 2px 8px 0 rgba(0,0,0,0.04)' }}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
+            
             {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.certificates.length > 0 && (
               <div className={styles.inputGroup} style={{ marginTop: '20px' }}>
                 <label className={styles.checkboxLabel}>
