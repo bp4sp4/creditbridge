@@ -48,6 +48,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // 전체 선택 함수
   const handleSelectAll = () => {
@@ -232,10 +233,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         popupClosing = true;
                         console.log('Payment completed, closing popup');
                         paymentWindow.close();
-                        // 약간의 딜레이 후 부모 페이지 이동
-                        setTimeout(() => {
-                          window.location.href = '/?payment=success&step=3';
-                        }, 1000);
+                        // 즉시 부모 페이지 이동 (로딩 스크린 표시됨)
+                        window.location.href = '/?payment=success&step=3';
                       }
                     }
                   } catch (e) {
@@ -245,9 +244,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         popupClosing = true;
                         console.log('Timeout reached, closing popup');
                         paymentWindow.close();
-                        setTimeout(() => {
-                          window.location.href = '/?payment=success&step=3';
-                        }, 1000);
+                        // 즉시 부모 페이지 이동 (로딩 스크린 표시됨)
+                        window.location.href = '/?payment=success&step=3';
                       }
                     }
                   }
@@ -255,7 +253,10 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                   // 팝업이 이미 닫혔으면 부모 페이지 이동
                   clearInterval(checkPopupClosed);
                   console.log('Popup already closed, navigating to step 3');
-                  window.location.href = '/?payment=success&step=3';
+                  if (!popupClosing) {
+                    popupClosing = true;
+                    window.location.href = '/?payment=success&step=3';
+                  }
                 }
 
                 // 최대 시간 초과
@@ -291,33 +292,29 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   // 결제 완료 후 URL 파라미터에서 step 감지
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // 약간의 딜레이를 주어 URL이 완전히 로드된 후 읽기
-      const timer = setTimeout(() => {
-        const params = new URLSearchParams(window.location.search);
-        const stepParam = params.get('step');
-        const paymentParam = params.get('payment');
+      const params = new URLSearchParams(window.location.search);
+      const stepParam = params.get('step');
+      const paymentParam = params.get('payment');
 
-        console.log('URL params detected:', { stepParam, paymentParam, search: window.location.search });
+      console.log('URL params detected:', { stepParam, paymentParam, search: window.location.search });
 
-        if (stepParam === '3') {
-          console.log('Setting step to 3');
-          setStep(3);
-          // URL 파라미터 제거 (약간의 딜레이 후)
-          setTimeout(() => {
-            window.history.replaceState({}, '', '/');
-          }, 500);
-        }
-
+      if (stepParam === '3') {
+        console.log('Setting step to 3');
+        setStep(3);
+        setIsInitializing(false);
+        // URL 파라미터 제거 (즉시)
+        window.history.replaceState({}, '', '/');
+      } else if (paymentParam === 'failed') {
         // 결제 실패 처리
-        if (paymentParam === 'failed') {
-          const orderId = params.get('orderId');
-          const message = params.get('message');
-          alert(`결제가 실패했습니다.\n${message || '다시 시도해주세요.'}`);
-          window.history.replaceState({}, '', '/');
-        }
-      }, 100);
-
-      return () => clearTimeout(timer);
+        const orderId = params.get('orderId');
+        const message = params.get('message');
+        alert(`결제가 실패했습니다.\n${message || '다시 시도해주세요.'}`);
+        window.history.replaceState({}, '', '/');
+        setIsInitializing(false);
+      } else {
+        // 일반 페이지 로드
+        setIsInitializing(false);
+      }
     }
   }, []);
 
@@ -327,10 +324,34 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         <Image src="/logo.png" alt="로고" width={130} height={34} className={styles.logo} />
       </header>
 
-
+      {isInitializing && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          flexDirection: 'column',
+          gap: '20px'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #e5e7eb',
+            borderTop: '4px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <p style={{ color: '#6b7280', fontSize: '16px' }}>처리 중...</p>
+          <style>{`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
-        {step === 1 && (
+        {!isInitializing && step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={styles.stepWrapper}>
             <div className={styles.infoSection}>
               <div className={styles.infoInner}>
@@ -345,7 +366,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           </motion.div>
         )}
 
-        {step === 2 && (
+        {!isInitializing && step === 2 && (
           <motion.div key="step2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={styles.stepWrapper} style={{ display: 'flex', flexDirection: 'column' }}>
             {/* 프로그레스바 */}
             <div className={styles.progressContainer}>
@@ -566,7 +587,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           </motion.div>
         )}
 
-        {step === 3 && (
+        {!isInitializing && step === 3 && (
           <motion.div key="step3" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={styles.stepWrapper} style={{ textAlign: 'center', justifyContent: 'center' }}>
             <Image src="/complete-check.png" alt="완료" width={240} height={240} style={{ margin: '0 auto 24px' }} />
             <h1 className={styles.title}>결제가 완료되었습니다!</h1>
