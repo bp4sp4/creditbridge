@@ -201,8 +201,17 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         setLoading(false);
 
         if (responseData.success && responseData.data?.payurl) {
-          // 결제창 URL로 직접 이동 (lite.payapp.kr/pay 페이지 건너뜀)
-          window.location.href = responseData.data.payurl;
+          // 결제창을 팝업으로 열기
+          const paymentWindow = window.open(
+            responseData.data.payurl,
+            'payapp_payment',
+            'width=500,height=700,left=200,top=100'
+          );
+
+          if (!paymentWindow) {
+            // 팝업 차단된 경우 새 탭으로 열기
+            window.location.href = responseData.data.payurl;
+          }
         } else {
           throw new Error(responseData.error || '결제 요청 실패');
         }
