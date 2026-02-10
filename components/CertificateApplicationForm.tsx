@@ -309,7 +309,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   // 연락처 유효성 검사 (010-XXXX-XXXX 형식)
   const isPhoneValid = /^01[0-9]-\d{3,4}-\d{4}$/.test(formData.contact);
 
-  const isFormValid = formData.name && isPhoneValid && formData.birth_prefix.length === 6 && formData.certificates.length > 0 && privacyAgreed;
+  const isFormValid = formData.name && isPhoneValid && formData.birth_prefix.length === 6 && formData.addressMain && formData.certificates.length > 0 && privacyAgreed;
 
   // 결제 완료 후 URL 파라미터에서 step 감지
   useEffect(() => {
@@ -412,7 +412,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         (formData.birth_prefix.length === 6 ? 1 : 0) +
                         (formData.certificates.length > 0 ? 1 : 0) +
                         (privacyAgreed ? 1 : 0)
-                      ) / 5 * 100,
+                      ) / 6 * 100,
                       100
                     )}%`
                   }}
@@ -427,7 +427,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     (formData.addressMain ? 1 : 0) +
                     (formData.certificates.length > 0 ? 1 : 0) +
                     (privacyAgreed ? 1 : 0)
-                  ) / 5 * 100
+                  ) / 6 * 100
                 )}%
               </div>
             </div>
@@ -541,7 +541,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 )}
               </div>
             )}
-            {formData.name && formData.contact && formData.birth_prefix.length === 6 && (
+            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && (
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>
                   자격증 선택
@@ -564,7 +564,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 </div>
               </div>
             )}
-            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.certificates.length > 0 && (
+            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.certificates.length > 0 && (
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>증명사진 첨부 (선택)</label>
                 <input
@@ -584,7 +584,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 )}
               </div>
             )}
-            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.certificates.length > 0 && (
+            {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.certificates.length > 0 && (
               <div className={styles.inputGroup} style={{ marginTop: '20px' }}>
                 <label className={styles.checkboxLabel}>
                   <input
@@ -606,6 +606,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                   !formData.name ||
                   !isPhoneValid ||
                   formData.birth_prefix.length !== 6 ||
+                  !formData.addressMain ||
                   formData.certificates.length === 0 ||
                   !privacyAgreed ||
                   loading
