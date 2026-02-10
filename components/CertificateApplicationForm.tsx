@@ -214,12 +214,18 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           } else {
             // 팝업으로부터 메시지 수신 대기
             const handleMessage = (event: MessageEvent) => {
+              console.log('Parent received message:', event.data);
               if (event.data.type === 'payment_success') {
-                // 부모 페이지를 결제 완료 페이지로 이동
-                window.location.href = '/?payment=success&step=3';
+                console.log('Payment success detected, navigating to step 3');
+                // 약간의 딜레이를 줘서 팝업 닫기 완료 대기
+                setTimeout(() => {
+                  window.location.href = '/?payment=success&step=3';
+                }, 500);
               } else if (event.data.type === 'payment_failed') {
-                // 부모 페이지를 결제 실패 페이지로 이동
-                window.location.href = `/?payment=failed&orderId=${event.data.orderId}&message=${encodeURIComponent(event.data.message)}`;
+                console.log('Payment failed detected');
+                setTimeout(() => {
+                  window.location.href = `/?payment=failed&orderId=${event.data.orderId}&message=${encodeURIComponent(event.data.message)}`;
+                }, 500);
               }
             };
             window.addEventListener('message', handleMessage);
