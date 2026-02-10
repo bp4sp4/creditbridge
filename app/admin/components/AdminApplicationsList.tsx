@@ -25,9 +25,9 @@ type Application = {
   trade_id?: string;
   mul_no?: string;
   pay_method?: string;
-  addressMain?: string;
-  addressDetail?: string;
-  postalCode?: string;
+  address_main?: string;
+  address_detail?: string;
+  postal_code?: string;
 };
 
 export default function AdminApplicationsList() {
@@ -117,6 +117,27 @@ export default function AdminApplicationsList() {
   // 데이터 새로고침
   const refreshData = () => {
     setCurrentPage(1);
+  };
+
+  // 즉시 삭제 (optimistic update)
+  const handleDeleteApplication = (id: string) => {
+    setApplications(prev => prev.filter(app => app.id !== id));
+    setTotalCount(prev => prev - 1);
+  };
+
+  // 즉시 수정 (optimistic update)
+  const handleUpdateApplication = (id: string, data: Partial<Application>) => {
+    setApplications(prev =>
+      prev.map(app =>
+        app.id === id ? { ...app, ...data } : app
+      )
+    );
+  };
+
+  // 즉시 추가 (optimistic update)
+  const handleAddApplication = (newApp: Application) => {
+    setApplications(prev => [newApp, ...prev]);
+    setTotalCount(prev => prev + 1);
   };
 
   if (loading) return <div className={styles.loading}>데이터를 불러오고 있습니다...</div>;
@@ -248,17 +269,21 @@ export default function AdminApplicationsList() {
 
                   <td>
                     {app.photo_url ? (
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/photos/${app.photo_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.photoLink}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        보기
-                      </a>
+                      <img
+                        src={`https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('https://')[1]}/storage/v1/object/public/photos/${app.photo_url}`}
+                        alt="사진"
+                        style={{
+                          width: '50px',
+                          height: '50px',
+                          borderRadius: '6px',
+                          objectFit: 'cover',
+                          border: '1px solid #e5e8eb',
+                          cursor: 'pointer'
+                        }}
+                        title="클릭하여 상세정보 보기"
+                      />
                     ) : (
-                      <span style={{ color: '#e5e8eb' }}>없음</span>
+                      <span style={{ color: '#ccc', fontSize: '12px' }}>없음</span>
                     )}
                   </td>
                   <td>
@@ -379,6 +404,8 @@ export default function AdminApplicationsList() {
           application={selectedApp}
           onClose={closeModal}
           onRefresh={refreshData}
+          onDelete={handleDeleteApplication}
+          onUpdate={handleUpdateApplication}
         />
       )}
 
@@ -387,6 +414,7 @@ export default function AdminApplicationsList() {
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
         onRefresh={refreshData}
+        onAdd={handleAddApplication}
       />
     </div>
   );

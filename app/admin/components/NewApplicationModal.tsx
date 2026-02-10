@@ -7,13 +7,16 @@ type NewApplication = {
   name: string;
   contact: string;
   birth_prefix: string;
-  addressMain: string;
-  addressDetail: string;
-  postalCode: string;
+  address_main: string;
+  address_detail: string;
+  postal_code: string;
   certificates: string[];
   cash_receipt: string;
   payment_status?: string;
   amount?: number;
+  paid_at?: string;
+  mul_no?: string;
+  photo_url?: string;
 };
 
 const CERTIFICATE_CATEGORIES = [
@@ -51,21 +54,26 @@ type NewApplicationModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onRefresh: () => void;
+  onAdd?: (data: NewApplication & { id: string; created_at: string }) => void;
 };
 
-export default function NewApplicationModal({ isOpen, onClose, onRefresh }: NewApplicationModalProps) {
+export default function NewApplicationModal({ isOpen, onClose, onRefresh, onAdd }: NewApplicationModalProps) {
   const [formData, setFormData] = useState<NewApplication>({
     name: '',
     contact: '',
     birth_prefix: '',
-    addressMain: '',
-    addressDetail: '',
-    postalCode: '',
+    address_main: '',
+    address_detail: '',
+    postal_code: '',
     certificates: [],
     cash_receipt: '',
     payment_status: 'paid',
     amount: 100000,
+    paid_at: new Date().toISOString().split('T')[0],
+    mul_no: '',
+    photo_url: '',
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -81,7 +89,7 @@ export default function NewApplicationModal({ isOpen, onClose, onRefresh }: NewA
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.contact || !formData.birth_prefix || !formData.addressMain) {
+    if (!formData.name || !formData.contact || !formData.birth_prefix || !formData.address_main) {
       alert('필수 정보를 입력해주세요.');
       return;
     }
@@ -95,38 +103,74 @@ export default function NewApplicationModal({ isOpen, onClose, onRefresh }: NewA
 
     try {
       const supabase = createClient();
+      let photoUrl = '';
+
+      // 사진 업로드
+      if (photoFile) {
+        const fileName = `${Date.now()}-${photoFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('photos')
+          .upload(fileName, photoFile);
+
+        if (uploadError) {
+          alert('사진 업로드 중 오류가 발생했습니다.');
+          return;
+        }
+        photoUrl = fileName;
+      }
+
       const { error } = await supabase.from('certificate_applications').insert([
         {
           name: formData.name,
           contact: formData.contact,
           birth_prefix: formData.birth_prefix,
-          address: `${formData.addressMain} ${formData.addressDetail}`,
-          addressMain: formData.addressMain,
-          addressDetail: formData.addressDetail,
-          postalCode: formData.postalCode,
+          address: `${formData.address_main} ${formData.address_detail}`,
+          address_main: formData.address_main,
+          address_detail: formData.address_detail,
           certificates: formData.certificates,
           cash_receipt: formData.cash_receipt,
           payment_status: formData.payment_status,
           amount: formData.amount,
-          created_at: new Date().toISOString(),
+          paid_at: formData.paid_at ? new Date(formData.paid_at).toISOString() : null,
+          mul_no: formData.mul_no || null,
+          photo_url: photoUrl || null,
+          order_id: null,
+          trade_id: null,
+          pay_method: null,
+          failed_at: null,
+          failed_message: null,
+          cancelled_at: null,
         },
       ]);
 
       if (!error) {
         alert('등록되었습니다.');
+        // 새로 생성된 데이터를 리스트에 즉시 추가
+        if (onAdd && error === null) {
+          const newData = {
+            ...formData,
+            photo_url: photoUrl,
+            id: new Date().getTime().toString(), // 임시 ID (실제로는 서버에서 반환)
+            created_at: new Date().toISOString(),
+          };
+          onAdd(newData as NewApplication & { id: string; created_at: string });
+        }
         setFormData({
           name: '',
           contact: '',
           birth_prefix: '',
-          addressMain: '',
-          addressDetail: '',
-          postalCode: '',
+          address_main: '',
+          address_detail: '',
+          postal_code: '',
           certificates: [],
           cash_receipt: '',
           payment_status: 'paid',
           amount: 100000,
+          paid_at: new Date().toISOString().split('T')[0],
+          mul_no: '',
+          photo_url: '',
         });
-        onRefresh();
+        setPhotoFile(null);
         onClose();
       } else {
         alert('등록 중 오류가 발생했습니다.');
@@ -292,8 +336,8 @@ export default function NewApplicationModal({ isOpen, onClose, onRefresh }: NewA
                 <input
                   type="text"
                   placeholder="서울시 강남구 테헤란로 123"
-                  value={formData.addressMain}
-                  onChange={(e) => setFormData({ ...formData, addressMain: e.target.value })}
+                  value={formData.address_main}
+                  onChange={(e) => setFormData({ ...formData, address_main: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -312,8 +356,8 @@ export default function NewApplicationModal({ isOpen, onClose, onRefresh }: NewA
                 <input
                   type="text"
                   placeholder="456호"
-                  value={formData.addressDetail}
-                  onChange={(e) => setFormData({ ...formData, addressDetail: e.target.value })}
+                  value={formData.address_detail}
+                  onChange={(e) => setFormData({ ...formData, address_detail: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -441,6 +485,89 @@ export default function NewApplicationModal({ isOpen, onClose, onRefresh }: NewA
                   }}
                 />
               </div>
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: '#999', display: 'block', marginBottom: '8px' }}>
+                  결제일
+                </label>
+                <input
+                  type="date"
+                  value={formData.paid_at || ''}
+                  onChange={(e) => setFormData({ ...formData, paid_at: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #e5e8eb',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: '#999', display: 'block', marginBottom: '8px' }}>
+                  결제번호
+                </label>
+                <input
+                  type="text"
+                  placeholder="예: 12345678"
+                  value={formData.mul_no || ''}
+                  onChange={(e) => setFormData({ ...formData, mul_no: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #e5e8eb',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 증명 사진 */}
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#999', marginBottom: '16px', textTransform: 'uppercase' }}>
+              증명 사진
+            </h3>
+            <div style={{
+              border: '2px dashed #e5e8eb',
+              borderRadius: '8px',
+              padding: '20px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              backgroundColor: photoFile ? '#f0f4ff' : '#fafbfc'
+            }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    setPhotoFile(e.target.files[0]);
+                    setFormData({ ...formData, photo_url: e.target.files[0].name });
+                  }
+                }}
+                style={{ display: 'none' }}
+                id="photo-upload"
+              />
+              <label
+                htmlFor="photo-upload"
+                style={{
+                  display: 'block',
+                  cursor: 'pointer',
+                  color: photoFile ? '#3182f6' : '#999'
+                }}
+              >
+                <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>
+                  {photoFile ? '✓ ' + photoFile.name : '사진을 선택하거나 드래그하세요'}
+                </div>
+                <div style={{ fontSize: '12px', color: '#999' }}>
+                  (JPG, PNG 형식)
+                </div>
+              </label>
             </div>
           </div>
 

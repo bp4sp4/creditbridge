@@ -17,7 +17,8 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nSimplify payment popup handling\n\n- Remove complex postMessage logic\n- Popup displays completion message for 3 seconds then auto-closes\n- Parent page monitors popup closure and navigates to step 3 after popup closes\n- Fixes issue where popup was navigating instead of parent page\n- Works by detecting when popup closes \\(up to 30 seconds wait\\)\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nImprove popup closure detection and handling\n\n- Detect when popup navigates to payment result page\n- Actively close popup from parent window after completion detected\n- Add timeout fallback \\(20 seconds\\) for cross-domain scenarios\n- Log popup status for debugging\n- Wait 1 second after closing popup before navigating parent page\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(curl:*)"
     ]
   }
 }

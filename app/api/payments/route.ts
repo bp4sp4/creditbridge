@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
 
     const payappUserId = process.env.NEXT_PUBLIC_PAYAPP_USER_ID || 'korhrdcorp';
     const payappShopName = process.env.NEXT_PUBLIC_PAYAPP_SHOP_NAME || '한평생교육';
+    const payappLinkKey = process.env.PAYAPP_LINK_KEY || '';
     let baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
     const paymentParams = new URLSearchParams({
       cmd: 'payrequest',
       userid: payappUserId,
+      linkkey: payappLinkKey,
       shopname: payappShopName,
       goodname: goodname,
       price: price.toString(),
