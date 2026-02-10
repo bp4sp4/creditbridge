@@ -212,23 +212,20 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             // 팝업 차단된 경우 새 탁으로 열기
             window.location.href = responseData.data.payurl;
           } else {
-            // 팝업으로부터 메시지 수신 대기
-            const handleMessage = (event: MessageEvent) => {
-              console.log('Parent received message:', event.data);
-              if (event.data.type === 'payment_success') {
-                console.log('Payment success detected, navigating to step 3');
-                // 약간의 딜레이를 줘서 팝업 닫기 완료 대기
-                setTimeout(() => {
-                  window.location.href = '/?payment=success&step=3';
-                }, 500);
-              } else if (event.data.type === 'payment_failed') {
-                console.log('Payment failed detected');
-                setTimeout(() => {
-                  window.location.href = `/?payment=failed&orderId=${event.data.orderId}&message=${encodeURIComponent(event.data.message)}`;
-                }, 500);
+            // 팝업이 닫힐 때까지 체크 (30초)
+            let checkCount = 0;
+            const maxChecks = 60; // 30초 (500ms * 60)
+
+            const checkPopupClosed = setInterval(() => {
+              checkCount++;
+
+              // 팝업이 닫혔거나 30초가 경과하면 부모 페이지 업데이트
+              if (paymentWindow.closed || checkCount >= maxChecks) {
+                clearInterval(checkPopupClosed);
+                // 부모 페이지를 결제 완료 페이지로 이동
+                window.location.href = '/?payment=success&step=3';
               }
-            };
-            window.addEventListener('message', handleMessage);
+            }, 500);
           }
         } else {
           throw new Error(responseData.error || '결제 요청 실패');

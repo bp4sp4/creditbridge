@@ -49,23 +49,28 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // 팝업에서 호출된 경우 자동 닫기 + 부모 페이지 업데이트
+      // 팝업을 자동으로 닫기 (3초 후)
       const html = `
         <html>
           <head>
             <title>결제 완료</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f5f5f5; }
+              .container { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+              h1 { color: #333; margin: 0 0 10px 0; }
+              p { color: #666; margin: 0; }
+            </style>
           </head>
           <body>
+            <div class="container">
+              <h1>✓ 결제가 완료되었습니다!</h1>
+              <p>잠시 후 창이 자동으로 닫힙니다...</p>
+            </div>
             <script>
-              if (window.opener) {
-                // 부모 페이지에 메시지 전송
-                window.opener.postMessage({ type: 'payment_success', payment: 'success', step: '3' }, '*');
-                // 팝업 자동 닫기
+              // 3초 후 팝업 자동 닫기
+              setTimeout(() => {
                 window.close();
-              } else {
-                // 팝업이 아닌 경우 리다이렉트
-                window.location.href = '/?payment=success&step=3';
-              }
+              }, 3000);
             </script>
           </body>
         </html>
@@ -104,28 +109,28 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // 팝업에서 호출된 경우 자동 닫기 + 부모 페이지 업데이트
+      // 팝업을 자동으로 닫기 (3초 후)
       const failHtml = `
         <html>
           <head>
             <title>결제 실패</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f5f5f5; }
+              .container { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+              h1 { color: #d32f2f; margin: 0 0 10px 0; }
+              p { color: #666; margin: 0; }
+            </style>
           </head>
           <body>
+            <div class="container">
+              <h1>✗ 결제가 실패했습니다</h1>
+              <p>잠시 후 창이 자동으로 닫힙니다...</p>
+            </div>
             <script>
-              if (window.opener) {
-                // 부모 페이지에 메시지 전송
-                window.opener.postMessage({
-                  type: 'payment_failed',
-                  payment: 'failed',
-                  orderId: '${var1}',
-                  message: '${(message || '결제 실패').replace(/'/g, "\\'")}'
-                }, '*');
-                // 팝업 자동 닫기
+              // 3초 후 팝업 자동 닫기
+              setTimeout(() => {
                 window.close();
-              } else {
-                // 팝업이 아닌 경우 리다이렉트
-                window.location.href = '/?payment=failed&orderId=${var1}&message=${encodeURIComponent(message || '결제 실패')}';
-              }
+              }, 3000);
             </script>
           </body>
         </html>
@@ -187,23 +192,28 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // 팝업에서 호출된 경우 자동 닫기 + 부모 페이지 업데이트
+      // 팝업을 자동으로 닫기 (3초 후)
       const html = `
         <html>
           <head>
             <title>결제 완료</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f5f5f5; }
+              .container { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+              h1 { color: #333; margin: 0 0 10px 0; }
+              p { color: #666; margin: 0; }
+            </style>
           </head>
           <body>
+            <div class="container">
+              <h1>✓ 결제가 완료되었습니다!</h1>
+              <p>잠시 후 창이 자동으로 닫힙니다...</p>
+            </div>
             <script>
-              if (window.opener) {
-                // 부모 페이지에 메시지 전송
-                window.opener.postMessage({ type: 'payment_success', payment: 'success', step: '3' }, '*');
-                // 팝업 자동 닫기
+              // 3초 후 팝업 자동 닫기
+              setTimeout(() => {
                 window.close();
-              } else {
-                // 팝업이 아닌 경우 리다이렉트
-                window.location.href = '/?payment=success&step=3';
-              }
+              }, 3000);
             </script>
           </body>
         </html>
@@ -242,28 +252,28 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // 팝업에서 호출된 경우 자동 닫기 + 부모 페이지 업데이트
+      // 팝업을 자동으로 닫기 (3초 후)
       const failHtml = `
         <html>
           <head>
             <title>결제 실패</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f5f5f5; }
+              .container { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+              h1 { color: #d32f2f; margin: 0 0 10px 0; }
+              p { color: #666; margin: 0; }
+            </style>
           </head>
           <body>
+            <div class="container">
+              <h1>✗ 결제가 실패했습니다</h1>
+              <p>잠시 후 창이 자동으로 닫힙니다...</p>
+            </div>
             <script>
-              if (window.opener) {
-                // 부모 페이지에 메시지 전송
-                window.opener.postMessage({
-                  type: 'payment_failed',
-                  payment: 'failed',
-                  orderId: '${var1}',
-                  message: '${(message || '결제 실패').replace(/'/g, "\\'")}'
-                }, '*');
-                // 팝업 자동 닫기
+              // 3초 후 팝업 자동 닫기
+              setTimeout(() => {
                 window.close();
-              } else {
-                // 팝업이 아닌 경우 리다이렉트
-                window.location.href = '/?payment=failed&orderId=${var1}&message=${encodeURIComponent(message || '결제 실패')}';
-              }
+              }, 3000);
             </script>
           </body>
         </html>
