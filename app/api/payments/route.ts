@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       recvphone: recvphone,
       memo: recvname || '',
       feedbackurl: `${baseUrl}/api/payments/webhook`,
-      returnurl: `${baseUrl}/api/payments/result`,
+      returnurl: `${baseUrl}/api/payments/result?var1=${encodeURIComponent(var1)}`,
       var1: var1,
       skip_cstpage: 'y', // 매출전표 페이지 스킵
       smsuse: 'n', // SMS 발송 안함

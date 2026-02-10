@@ -14,8 +14,18 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state'); // 결제 결과 상태 (1:성공, 0:실패)
     const tradeid = searchParams.get('tradeid'); // 거래번호
     const mul_no = searchParams.get('mul_no'); // 결제 요청번호
-    const var1 = searchParams.get('var1'); // 우리가 보낸 주문번호
+    let var1 = searchParams.get('var1'); // 우리가 보낸 주문번호
     const message = searchParams.get('message'); // 결과 메시지
+
+    // 모바일 기기 감지 (먼저)
+    const userAgent = request.headers.get('user-agent') || '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+    // 데이터베이스 업데이트 전에 모바일인 경우 바로 리다이렉트
+    if (isMobile && !state && !tradeid) {
+      // 결제 콜백이 아닌 경우 바로 리다이렉트
+      return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
+    }
 
     // 결제 성공 여부 확인 (state가 '1'이거나 mul_no가 있으면 성공)
     if (state === '1' || (state === null && mul_no)) {
@@ -47,15 +57,6 @@ export async function GET(request: NextRequest) {
             message
           }
         });
-      }
-
-      // 모바일 기기 감지
-      const userAgent = request.headers.get('user-agent') || '';
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-
-      if (isMobile) {
-        // 모바일: 메인 페이지로 리다이렉트 (팝업이 없으므로)
-        return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
       }
 
       // 데스크톱: 결제 완료 후 부모 페이지로 이동
@@ -125,15 +126,6 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // 모바일 기기 감지
-      const userAgent = request.headers.get('user-agent') || '';
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-
-      if (isMobile) {
-        // 모바일: 메인 페이지로 리다이렉트 (팝업이 없으므로)
-        return NextResponse.redirect(new URL(`/?payment=failed&message=${encodeURIComponent(message || '결제에 실패했습니다')}`, request.url));
-      }
-
       // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
       const failHtml = `
         <html>
@@ -185,6 +177,15 @@ export async function POST(request: NextRequest) {
     const message = params.get('message'); // 메시지
     const price = params.get('price'); // 결제 금액
 
+    // 모바일 기기 감지 (먼저 - 콜백 전에)
+    const userAgent = request.headers.get('user-agent') || '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+    if (isMobile) {
+      // 모바일: 바로 리다이렉트
+      return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
+    }
+
     // 데이터베이스에 결제 결과 저장 (state가 '1'이거나 mul_no가 있으면 성공)
     if (state === '1' || (state === null && mul_no)) {
       const { error: updateError, data: appData } = await supabase
@@ -215,15 +216,6 @@ export async function POST(request: NextRequest) {
           amount: parseInt(price || '0'),
           response_data: Object.fromEntries(params)
         });
-      }
-
-      // 모바일 기기 감지
-      const userAgent = request.headers.get('user-agent') || '';
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-
-      if (isMobile) {
-        // 모바일: 메인 페이지로 리다이렉트 (팝업이 없으므로)
-        return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
       }
 
       // 데스크톱: 결제 완료 후 부모 페이지로 이동
@@ -291,15 +283,6 @@ export async function POST(request: NextRequest) {
           error_message: message,
           response_data: Object.fromEntries(params)
         });
-      }
-
-      // 모바일 기기 감지
-      const userAgent = request.headers.get('user-agent') || '';
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-
-      if (isMobile) {
-        // 모바일: 메인 페이지로 리다이렉트 (팝업이 없으므로)
-        return NextResponse.redirect(new URL(`/?payment=failed&message=${encodeURIComponent(message || '결제에 실패했습니다')}`, request.url));
       }
 
       // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
