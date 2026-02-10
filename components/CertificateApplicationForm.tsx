@@ -329,18 +329,19 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         console.log('Setting step to 3 - Payment completed');
         sessionStorage.removeItem('paymentProcessing');
         sessionStorage.setItem('paymentProcessed', 'true');
+        // URL 파라미터 제거 (먼저 처리)
+        window.history.replaceState({}, '', '/');
         setStep(3);
         setIsInitializing(false);
-        // URL 파라미터 제거 (즉시)
-        window.history.replaceState({}, '', '/');
       } else if (paymentParam === 'failed' && !hasProcessedPayment) {
         // 결제 실패 처리
         sessionStorage.removeItem('paymentProcessing');
         sessionStorage.setItem('paymentProcessed', 'true');
         const orderId = params.get('orderId');
         const message = params.get('message');
-        alert(`결제가 실패했습니다.\n${message || '다시 시도해주세요.'}`);
+        // URL 파라미터 제거 (먼저 처리)
         window.history.replaceState({}, '', '/');
+        alert(`결제가 실패했습니다.\n${message || '다시 시도해주세요.'}`);
         setIsInitializing(false);
       } else {
         // 일반 페이지 로드
