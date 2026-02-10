@@ -89,7 +89,7 @@ background: var(--Atomic-Mono-100, #F2F2F2);
   margin-top: 12px;
 }
 .container {
-    min-width: 320px;
+    
     max-width: 500px;
     margin: 0 auto;
     min-height: 100vh;
@@ -224,7 +224,7 @@ background: var(--Atomic-Mono-100, #F2F2F2);
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 500px;
+    max-width: 328px;
     height: 56px;
     background-color: var(--Blue-500);
     color: #fff;
@@ -234,7 +234,7 @@ background: var(--Atomic-Mono-100, #F2F2F2);
     font-weight: 700;
     cursor: pointer;
     transition: background-color 0.2s;
-    padding: 16px 0;
+    
   }
 
   
@@ -292,10 +292,10 @@ background: var(--Atomic-Mono-100, #F2F2F2);
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     z-index: 1000;
-    padding: 24px;
+    
   }
   
   .modalPrivacy {
@@ -498,4 +498,335 @@ background: var(--Atomic-Mono-100, #F2F2F2);
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  .infoFooter{
+    padding: 16px 0;
+  }
+
+  /* 자격증 선택 모달 - 바텀 시트 스타일 */
+  .certModalContainer {
+    border-radius: 10px 10px 0 0;
+    background: #FFF;
+    box-shadow: 0 -3px 7px 0 rgba(0, 0, 0, 0.10);
+    width: 100%;
+    max-width: 500px;
+    max-height: 74vh;
+    min-height: 74vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .certModalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid #f2f4f6;
+  }
+
+  .certModalTitle {
+    font-size: 20px;
+    font-weight: 700;
+    color: #191f28;
+    margin: 0;
+  }
+
+  .certModalCloseButton {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #4e5968;
+    padding: 0;
+    font-size: 20px;
+  }
+
+  .certModalBody {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* 좌측 카테고리 리스트 */
+  .certCategoryList {
+    border-right: 1px solid #f2f4f6;
+    overflow-y: auto;
+    overflow-x: hidden;
+    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background-color: #fafbfc;
+  }
+
+  .certCategoryItem {
+    padding: 16px;
+    width: 140px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    border-radius: 0;
+    flex-shrink: 0;
+    font-size: 16px;
+    background: none;
+    border: none;
+    text-align: left;
+    color: #6B7280;
+    font-weight: 500;
+
+    display: flex;
+    align-items: center;
+  }
+
+
+  .certCategoryItemActive {
+    background-color: #fff;
+    color: #0051FF;
+    font-weight: 500;
+    display: flex;
+
+  }
+
+  .certCategoryItemInactive {
+    background-color:#F2F2F2;
+    color: #3D3D3D;
+    font-weight: 500;
+    border-right: none;
+  }
+
+  /* 우측 선택 영역 */
+  .certSelectArea {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    overflow: hidden;
+  }
+
+
+  /* 선택된 항목 태그 */
+  .selectedCertTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    background-color: #F2F2F2;
+    color: #1D1D1D;
+    border-radius: 4px;
+    font-size: 14px;
+    
+    font-weight: 500;
+  }
+
+  .removeTagButton {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #919191;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .removeTagButton:hover {
+    opacity: 0.7;
+  }
+
+  .certModalFooter {
+    padding: 20px 16px;
+    border-top: 1px solid #f2f4f6;
+    display: flex;
+    gap: 12px;
+  }
+
+  .certModalConfirmButton {
+    flex: 1;
+    height: 51px;
+    background-color: #0051FF;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .certModalConfirmButton:disabled {
+    background-color: #f2f4f6;
+    color: #b0b8c1;
+    cursor: not-allowed;
+  }
+
+  .certModalResetButton {
+    flex: 1;
+    height: 51px;
+    background-color: #fff;
+    color: #6B7280;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    
+  }
+
+  .certModalResetButton:hover {
+    border-color: #D1D5DB;
+    background-color: #f9fafb;
+  }
+
+  .resetButtonContent {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .resetIcon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 자격증 목록 */
+  .certListItem {
+    padding: 16px;
+    background: #fff;
+    font-size: 16px;
+    color: #1D1D1D;
+    cursor: pointer;
+    font-weight: 500;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .certListItem:hover {
+    border-color: #D1D5DB;
+  }
+
+  .certListItemSelected {
+    
+    
+    color: #0051FF;
+    font-weight: 500;
+  }
+
+  .certCategorySection {
+    margin-bottom: 20px;
+  }
+
+  .certCategoryName {
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+  }
+
+  .certListContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .selectedCertContainer {
+    
+    border-top: 1px solid #f2f4f6;
+    background-color: #fff;
+    width: 100%;
+  }
+
+  .selectedCertLabel {
+    
+    font-size: 16px;
+    font-weight: 700;
+    color: #010101;
+    padding: 16px;
+  }
+.selectedCertCount{
+    color: #0051FF;
+}
+
+
+  .selectedCertList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 16px;
+  }
+
+  .certSelectAreaWrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .certListWrapper {
+    flex: 1;
+    overflow-y: auto;
+    
+  }
+
+  .noCertMessage {
+    font-size: 13px;
+    color: #9CA3AF;
+  }
+
+  /* 프로그레스바 */
+  .progressContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .progressLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+  }
+
+  .progressBar {
+    width: 100%;
+    height: 8px;
+    background-color: #E5E7EB;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progressFill {
+    height: 100%;
+    background: linear-gradient(90deg, #4C85FF, #0051FF);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  .requiredMark {
+    color: #ef4444;
+    font-weight: bold;
+    margin-left: 4px;
   }

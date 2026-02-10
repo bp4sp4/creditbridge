@@ -12,19 +12,31 @@ import DaumPostcodeInput from './DaumPostcodeInput';
 // 자격증 데이터 구조
 const CERTIFICATE_CATEGORIES = [
   {
-    label: '사회복지 이수과목',
+    label: '★필수★\n 노인복지분야',
+    options: ['노인심리상담사', '병원동행매니저', '노인돌봄생활지원사', '실버인지활동지도사', '안전관리지도사']
+  },
+  {
+    label: '★필수★\n 아동복지분야',
+    options: ['지역아동교육지도사', '방과후돌봄교실지도사', '방과후학교지도사', '진로적성상담사', '심리상담사']
+  },
+    {
+    label: '★필수★\n 노인복지분야',
+    options: ['진로적성상담사', '심리상담사', '독서지도사', '학교폭력예방상담사', '인성지도사']
+  },
+  {
+    label: '사회복지 ',
     options: ['노인심리상담사1급', '노인돌봄생활지원사1급', '병원동행매니저1급', '심리상담사1급', '다문화심리상담사1급', '음악심리상담사1급', '아동미술심리상담사1급', '부모교육상담사1급', '실버인지활동지도사1급', '지역아동교육지도사1급', '방과후돌봄교실지도사1급', '학교폭력예방상담사1급', '진로적성상담사1급', '안전교육지도사1급', '자원봉사지도사1급']
   },
   {
-    label: '보육과정 이수과목',
+    label: '보육과정 ',
     options: ['방과후아동지도사1급', '방과후돌봄교실지도사1급', '방과후수학지도사1급', '방과후학교지도사1급', '독서지도사1급', '진로적성상담사1급/인성지도사', '지역아동교육지도사1급', '동화구연지도사1급', '아동공예지도사1급', '아동요리지도사1급', '안전교육지도사1급', '아동미술심리상담사1급', '부모교육상담사1급', '디지털중독예방지도사1급']
   },
   {
-    label: '교양수업 이수과목',
+    label: '교양수업 ',
     options: ['지역아동교육지도사1급', '심리분석사1급', '심리상담사1급', '부동산권리분석사1급']
   },
   {
-    label: '신규 발급 과정',
+    label: '신규',
     options: ['북아트1급', '손유희지도사', '유튜브크리에이터', '이미지메이킹스피킹', '자기주도학습지도사1급', '종이접기지도사', '클레이아트지도사', '타로심리상담사', 'POP디자인지도사', 'SNS마케팅전문가', '병원코디네이터1급', '독서논술지도사1급']
   }
 ];
@@ -34,6 +46,38 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   const [loading, setLoading] = useState(false);
   const [showCertModal, setShowCertModal] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
+
+  // 전체 선택 함수
+  const handleSelectAll = () => {
+    const allCerts = CERTIFICATE_CATEGORIES.flatMap(cat => cat.options);
+    setFormData(prev => ({
+      ...prev,
+      certificates: allCerts
+    }));
+  };
+
+  // 전체 해제 함수
+  const handleDeselectAll = () => {
+    setFormData(prev => ({
+      ...prev,
+      certificates: []
+    }));
+  };
+
+  // 카테고리 전체 토글 (모두 선택 / 모두 해제)
+  const handleToggleCategoryAll = (idx: number) => {
+    const opts = CERTIFICATE_CATEGORIES[idx].options;
+    setFormData(prev => {
+      const allSelected = opts.every(o => prev.certificates.includes(o));
+      return {
+        ...prev,
+        certificates: allSelected
+          ? prev.certificates.filter(c => !opts.includes(c))
+          : [...prev.certificates, ...opts.filter(o => !prev.certificates.includes(o))]
+      };
+    });
+  };
 
   const [formData, setFormData] = useState({
     name: '',
@@ -61,6 +105,20 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         ? prev.certificates.filter(c => c !== cert)
         : [...prev.certificates, cert]
     }));
+  };
+
+  // 연락처 포맷팅 함수 (010-XXXX-XXXX 형식)
+  const formatPhoneNumber = (value: string) => {
+    const numbers = value.replace(/[^0-9]/g, '');
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+  };
+
+  // 생년월일 포맷팅 함수 (YYMMDD 형식)
+  const formatBirthDate = (value: string) => {
+    const numbers = value.replace(/[^0-9]/g, '');
+    return numbers.slice(0, 6);
   };
 
   const handleSubmit = async () => {
@@ -100,7 +158,10 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
     }
   };
 
-  const isFormValid = formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.certificates.length > 0 && privacyAgreed;
+  // 연락처 유효성 검사 (010-XXXX-XXXX 형식)
+  const isPhoneValid = /^01[0-9]-\d{3,4}-\d{4}$/.test(formData.contact);
+
+  const isFormValid = formData.name && isPhoneValid && formData.birth_prefix.length === 6 && formData.certificates.length > 0 && privacyAgreed;
 
   return (
     <div className={styles.container}>
@@ -116,36 +177,61 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             <div className={styles.infoSection}>
               <div className={styles.infoInner}>
                 <div style={{ marginBottom: '36px' }}>
-                  <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', lineHeight: '1.3' }}>학점 연계 신청</h1>
+                  <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', lineHeight: '1.3' }}>취업자격증 연계 신청</h1>
                 </div>
                      <StepIndicator step={step} />
-                <div className={styles.infoCall}>
-                  <span style={{
-                    color: 'var(--Atomic-Blue-600, #0049E5)',
-                    fontFamily: 'Pretendard',
-                    fontSize: 18,
-                    fontWeight: 700,
-                    lineHeight: '21.6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8
-                  }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" style={{marginRight: 4}}>
-                      <path fillRule="evenodd" clipRule="evenodd" d="M16.7045 21.9824C15.2645 21.9294 11.1835 21.3654 6.90947 17.0924C2.63647 12.8184 2.07347 8.73837 2.01947 7.29737C1.93947 5.10137 3.62147 2.96837 5.56447 2.13537C5.79844 2.03433 6.05467 1.99587 6.308 2.02374C6.56133 2.05162 6.80305 2.14488 7.00947 2.29437C8.60947 3.46037 9.71346 5.22437 10.6615 6.61137C10.87 6.9161 10.9592 7.28691 10.912 7.65316C10.8648 8.01941 10.6845 8.35549 10.4055 8.59737L8.45446 10.0464C8.36021 10.1144 8.29386 10.2144 8.26774 10.3277C8.24162 10.441 8.25752 10.5599 8.31246 10.6624C8.75447 11.4654 9.54046 12.6614 10.4405 13.5614C11.3405 14.4614 12.5935 15.2994 13.4525 15.7914C13.5602 15.8518 13.6869 15.8687 13.8067 15.8386C13.9265 15.8085 14.0302 15.7336 14.0965 15.6294L15.3665 13.6964C15.6 13.3862 15.9444 13.1784 16.3276 13.1165C16.7109 13.0547 17.1032 13.1435 17.4225 13.3644C18.8295 14.3384 20.4715 15.4234 21.6735 16.9624C21.8351 17.1703 21.9379 17.4178 21.9712 17.679C22.0044 17.9402 21.9669 18.2056 21.8625 18.4474C21.0255 20.4004 18.9075 22.0634 16.7045 21.9824Z" fill="#0049E5"/>
-                    </svg>
-                    빠른 문의: <a href="tel:0221354951" className={styles.infoCallLink}>02-2135-4951</a>
-                  </span>
-                </div>
+              
               </div>
               <button className={styles.bottomButton} onClick={() => setStep(2)}>다음</button>
+
             </div>
           </motion.div>
         )}
 
         {step === 2 && (
           <motion.div key="step2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={styles.stepWrapper}>
+            {/* 프로그레스바 */}
+            <div className={styles.progressContainer}>
+              <div className={styles.progressLabel}>
+                작성 진행도
+              </div>
+              <div className={styles.progressBar}>
+                <div
+                  className={styles.progressFill}
+                  style={{
+                    width: `${Math.min(
+                      (
+                        (formData.name ? 1 : 0) +
+                        (formData.contact && isPhoneValid ? 1 : 0) +
+                        (formData.birth_prefix.length === 6 ? 1 : 0) +
+                        (formData.addressMain && formData.addressDetail ? 1 : 0) +
+                        (formData.certificates.length > 0 ? 1 : 0) +
+                        (privacyAgreed ? 1 : 0)
+                      ) / 6 * 100,
+                      100
+                    )}%`
+                  }}
+                />
+              </div>
+              <div style={{ fontSize: '12px', color: '#6B7280', textAlign: 'right' }}>
+                {Math.ceil(
+                  (
+                    (formData.name ? 1 : 0) +
+                    (formData.contact && isPhoneValid ? 1 : 0) +
+                    (formData.birth_prefix.length === 6 ? 1 : 0) +
+                    (formData.addressMain && formData.addressDetail ? 1 : 0) +
+                    (formData.certificates.length > 0 ? 1 : 0) +
+                    (privacyAgreed ? 1 : 0)
+                  ) / 6 * 100
+                )}%
+              </div>
+            </div>
+
             <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>이름</label>
+              <label className={styles.inputLabel}>
+                이름
+                <span className={styles.requiredMark}>*</span>
+              </label>
               <input
                 type="text"
                 className={styles.inputField}
@@ -156,32 +242,54 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             </div>
             {formData.name && (
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>연락처</label>
+                <label className={styles.inputLabel}>
+                  연락처
+                  <span className={styles.requiredMark}>*</span>
+                </label>
                 <input
                   type="text"
                   className={styles.inputField}
                   value={formData.contact}
-                  onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                  placeholder="연락처를 입력해주세요"
+                  onChange={(e) => setFormData({ ...formData, contact: formatPhoneNumber(e.target.value) })}
+                  placeholder="010-0000-0000"
+                  maxLength={13}
                 />
               </div>
             )}
             {formData.name && formData.contact && (
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>생년월일 (앞 6자리)</label>
+                <label className={styles.inputLabel}>
+                  생년월일
+                  <span className={styles.requiredMark}>*</span>
+                </label>
                 <input
                   type="text"
-                  maxLength={6}
+                  maxLength={10}
                   className={styles.inputField}
                   value={formData.birth_prefix}
-                  onChange={(e) => setFormData({ ...formData, birth_prefix: e.target.value })}
-                  placeholder="yymmdd"
+                  onChange={(e) => {
+                    const formatted = e.target.value.replace(/[^0-9-]/g, '');
+                    let result = '';
+                    const numbers = formatted.replace(/-/g, '');
+                    if (numbers.length <= 4) {
+                      result = numbers;
+                    } else if (numbers.length <= 6) {
+                      result = `${numbers.slice(0, 4)}-${numbers.slice(4)}`;
+                    } else {
+                      result = `${numbers.slice(0, 4)}-${numbers.slice(4, 6)}-${numbers.slice(6, 8)}`;
+                    }
+                    setFormData({ ...formData, birth_prefix: numbers.slice(0, 6) });
+                  }}
+                  placeholder="1998-10-27"
                 />
               </div>
             )}
             {formData.name && formData.contact && formData.birth_prefix.length === 6 && (
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>자격증 수령 주소</label>
+                <label className={styles.inputLabel}>
+                  자격증 수령 주소
+                  <span className={styles.requiredMark}>*</span>
+                </label>
                 <DaumPostcodeInput
                   onComplete={({ zonecode, address, addressDetail }) => {
                     setFormData((prev) => ({
@@ -225,7 +333,10 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             )}
             {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.addressDetail && (
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>자격증 선택</label>
+                <label className={styles.inputLabel}>
+                  자격증 선택
+                  <span className={styles.requiredMark}>*</span>
+                </label>
                 <div
                   className={`${styles.inputField} ${styles.courseSelectField}`}
                   onClick={() => setShowCertModal(true)}
@@ -245,7 +356,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             )}
             {formData.name && formData.contact && formData.birth_prefix.length === 6 && formData.addressMain && formData.addressDetail && formData.certificates.length > 0 && (
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>증명사진 첨부</label>
+                <label className={styles.inputLabel}>증명사진 첨부 (선택)</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -283,7 +394,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 className={styles.bottomButton}
                 disabled={
                   !formData.name ||
-                  !formData.contact ||
+                  !isPhoneValid ||
                   formData.birth_prefix.length !== 6 ||
                   !formData.addressMain ||
                   !formData.addressDetail ||
@@ -310,34 +421,97 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
       {/* 자격증 선택 모달 */}
       {showCertModal && (
         <div className={styles.modalOverlay} onClick={() => setShowCertModal(false)}>
-          <div className={styles.modalPrivacy} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalPrivacyHeader}>
-              <h3 className={styles.modalPrivacyTitle}>자격증 선택 (중복가능)</h3>
-              <button className={styles.modalCloseButton} onClick={() => setShowCertModal(false)}>✕</button>
+          <div className={styles.certModalContainer} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.certModalHeader}>
+              <h3 className={styles.certModalTitle}>자격증</h3>
+              <button className={styles.certModalCloseButton} onClick={() => setShowCertModal(false)}>✕</button>
             </div>
-            <div className={styles.modalPrivacyContent} style={{ overflowY: 'auto', maxHeight: '60vh' }}>
-              <div style={{ padding: '20px' }}>
-                {CERTIFICATE_CATEGORIES.map((cat) => (
-                  <div key={cat.label} style={{ marginBottom: '24px' }}>
-                    <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#4C85FF', marginBottom: '12px' }}>{cat.label}</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      {cat.options.map(opt => (
-                        <button
-                          key={opt}
-                          className={`${styles.courseItem} ${formData.certificates.includes(opt) ? styles.courseItemSelected : ''}`}
-                          onClick={() => handleCertToggle(opt)}
-                          style={{ fontSize: '13px', padding: '10px 8px' }}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+
+            <div className={styles.certModalBody}>
+              {/* 좌측: 카테고리 리스트 */}
+              <div className={styles.certCategoryList}>
+                {CERTIFICATE_CATEGORIES.map((cat, idx) => (
+                  <button
+                    key={`category-${idx}`}
+                    className={`${styles.certCategoryItem} ${idx === selectedCategoryIdx ? styles.certCategoryItemActive : styles.certCategoryItemInactive}`}
+                    onClick={() => setSelectedCategoryIdx(idx)}
+                  >
+                    <span style={{ whiteSpace: 'pre-line' }}>{cat.label}</span>
+                  </button>
                 ))}
               </div>
+
+              {/* 우측: 자격증 목록 */}
+              <div className={styles.certSelectAreaWrapper}>
+                <div className={styles.certListWrapper}>
+                  <div className={styles.certCategorySection}>
+                 
+                      <div className={styles.certListContainer}>
+                        {/* 카테고리 전체 토글 버튼 */}
+                        <button
+                          key={`all-${selectedCategoryIdx}`}
+                          onClick={() => handleToggleCategoryAll(selectedCategoryIdx)}
+                          className={`${styles.certListItem} ${CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.every(o => formData.certificates.includes(o)) ? styles.certListItemSelected : ''}`}
+                        >
+                          <span>전체</span>
+                          {CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.every(o => formData.certificates.includes(o)) && <span>✓</span>}
+                        </button>
+
+                        {CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.map(opt => (
+                          <button
+                            key={opt}
+                            onClick={() => handleCertToggle(opt)}
+                            className={`${styles.certListItem} ${formData.certificates.includes(opt) ? styles.certListItemSelected : ''}`}
+                          >
+                            <span>{opt}</span>
+                            {formData.certificates.includes(opt) && <span>✓</span>}
+                          </button>
+                        ))}
+                      </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className={styles.courseModalFooter}>
-              <button className={styles.courseConfirmButton} onClick={() => setShowCertModal(false)}>선택 완료</button>
+
+            {/* 선택된 자격증 표시 (모달 하단, 전체 너비) */}
+            <div className={styles.selectedCertContainer}>
+              <div className={styles.selectedCertLabel}>
+                선택한 자격증 <span className={styles.selectedCertCount}>  {formData.certificates.length}</span>
+              </div>
+              <div className={styles.selectedCertList}>
+                {formData.certificates.map(cert => (
+                  <div key={cert} className={styles.selectedCertTag}>
+                    <span>{cert}</span>
+                    <button
+                      className={styles.removeTagButton}
+                      onClick={() => handleCertToggle(cert)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {formData.certificates.length === 0 && (
+                  <div className={styles.noCertMessage}>
+                    선택한 자격증이 없습니다
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.certModalFooter}>
+              <button className={styles.certModalResetButton} onClick={handleDeselectAll}>
+                <div className={styles.resetButtonContent}>
+                  <span>초기화</span>
+                  <div className={styles.resetIcon}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 2.03321C6.33627 2.03326 4.9234 2.61176 3.76758 3.76758C2.61175 4.92341 2.03326 6.33627 2.0332 8C2.03324 9.66366 2.61189 11.0766 3.76758 12.2324C4.92338 13.3881 6.33634 13.9667 8 13.9668C9.15476 13.9668 10.206 13.6683 11.1514 13.0713C12.0942 12.4758 12.8209 11.6814 13.3301 10.6895C13.4449 10.4884 13.4505 10.2715 13.3535 10.0498C13.2569 9.82916 13.0935 9.6795 12.8691 9.60938C12.6659 9.54261 12.463 9.5463 12.2646 9.6211C12.0646 9.69663 11.9086 9.83209 11.7998 10.0225L11.7988 10.0244C11.4289 10.718 10.9062 11.2704 10.2305 11.6826C9.55588 12.0941 8.81313 12.2998 8 12.2998C6.8041 12.2998 5.79066 11.8824 4.9541 11.0459C4.11766 10.2093 3.69926 9.1959 3.69922 8C3.69928 6.80403 4.11752 5.79069 4.9541 4.9541C5.79069 4.11752 6.80403 3.69928 8 3.69922C8.77737 3.69925 9.49674 3.89055 10.1592 4.27246C10.7709 4.62529 11.261 5.10193 11.6338 5.69922H9.4668C9.23471 5.69928 9.03476 5.78025 8.87402 5.94043C8.71317 6.10077 8.63235 6.30061 8.63281 6.53321C8.63336 6.76551 8.71437 6.96565 8.87402 7.12598C9.03393 7.2863 9.23401 7.36616 9.4668 7.36621H13.1338C13.3662 7.36664 13.5662 7.28728 13.7266 7.12696C13.887 6.96653 13.9668 6.76618 13.9668 6.53321V2.86621C13.9677 2.6342 13.8881 2.43412 13.7275 2.27344C13.5667 2.11272 13.3655 2.03266 13.1328 2.03321C12.9007 2.03391 12.7012 2.1138 12.541 2.27344C12.3805 2.43339 12.2999 2.63329 12.2998 2.86621V3.88672C11.7771 3.32321 11.1639 2.88126 10.4609 2.56348C9.67821 2.20974 8.85733 2.03323 8 2.03321Z" fill="#656565"/>
+                    </svg>
+                  </div>
+                </div>
+              </button>
+              <button className={styles.certModalConfirmButton} onClick={() => setShowCertModal(false)}>
+                선택하기
+              </button>
             </div>
           </div>
         </div>
