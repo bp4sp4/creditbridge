@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
 
     // 데이터베이스 업데이트 전에 모바일인 경우 바로 리다이렉트
     if (isMobile && !state && !tradeid) {
-      // 결제 콜백이 아닌 경우 바로 리다이렉트
-      return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
+      // 결제 콜백이 아닌 경우 홈으로 리다이렉트 (새로고침)
+      return NextResponse.redirect(new URL('/', request.url));
     }
 
     // 결제 성공 여부 확인 (state가 '1'이거나 mul_no가 있으면 성공)
@@ -182,8 +182,8 @@ export async function POST(request: NextRequest) {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
     if (isMobile) {
-      // 모바일: 바로 리다이렉트
-      return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
+      // 모바일: 홈으로 리다이렉트 (새로고침)
+      return NextResponse.redirect(new URL('/', request.url));
     }
 
     // 데이터베이스에 결제 결과 저장 (state가 '1'이거나 mul_no가 있으면 성공)
