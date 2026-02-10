@@ -157,16 +157,14 @@ export async function GET(request: NextRequest) {
       \`;
       document.head.appendChild(style);
 
-      setTimeout(function() {
-        if (window.opener) {
-          // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
-          window.opener.location.href = '/?payment=success&step=3';
-          window.close();
-        } else {
-          // 팝업 아닌 경우: 직접 이동
-          window.location.href = '/?payment=success&step=3';
-        }
-      }, 3000);
+      if (window.opener) {
+        // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
+        window.opener.location.href = '/?payment=success&step=3';
+        window.close();
+      } else {
+        // 팝업 아닌 경우: 직접 이동
+        window.location.href = '/?payment=success&step=3';
+      }
     </script>
   </body>
 </html>`;
@@ -424,16 +422,14 @@ export async function POST(request: NextRequest) {
       \`;
       document.head.appendChild(style);
 
-      setTimeout(function() {
-        if (window.opener) {
-          // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
-          window.opener.location.href = '/?payment=success&step=3';
-          window.close();
-        } else {
-          // 팝업 아닌 경우: 직접 이동
-          window.location.href = '/?payment=success&step=3';
-        }
-      }, 3000);
+      if (window.opener) {
+        // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
+        window.opener.location.href = '/?payment=success&step=3';
+        window.close();
+      } else {
+        // 팝업 아닌 경우: 직접 이동
+        window.location.href = '/?payment=success&step=3';
+      }
     </script>
   </body>
 </html>`;
