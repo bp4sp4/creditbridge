@@ -511,8 +511,8 @@ background: var(--Atomic-Mono-100, #F2F2F2);
     box-shadow: 0 -3px 7px 0 rgba(0, 0, 0, 0.10);
     width: 100%;
     max-width: 500px;
-    max-height: 74vh;
-    min-height: 74vh;
+    max-height: 90vh;
+    min-height: 90vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -761,22 +761,38 @@ background: var(--Atomic-Mono-100, #F2F2F2);
   }
 
   .selectedCertLabel {
-    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 16px;
     font-weight: 700;
     color: #010101;
     padding: 16px;
   }
-.selectedCertCount{
+
+  .selectedCertCount {
     color: #0051FF;
-}
+  }
+
+  .selectedCertPrice {
+    font-size: 16px;
+    font-weight: 600;
+    color: #010101;
+  }
+
+  .selectedCertPriceNumber {
+    color: #0051FF;
+    font-weight: 700;
+  }
 
 
   .selectedCertList {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    padding: 16px;
+    padding: 0 16px 16px 16px;
+    max-height: 140px;
+    overflow-y: auto;
   }
 
   .certSelectAreaWrapper {

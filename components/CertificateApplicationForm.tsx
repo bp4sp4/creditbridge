@@ -13,15 +13,15 @@ import DaumPostcodeInput from './DaumPostcodeInput';
 const CERTIFICATE_CATEGORIES = [
   {
     label: '★필수★\n 노인복지분야',
-    options: ['노인심리상담사', '병원동행매니저', '노인돌봄생활지원사', '실버인지활동지도사', '안전관리지도사']
+    options: ['노인심리상담사1급', '병원동행매니저1급', '노인돌봄생활지원사1급', '실버인지활동지도사1급', '안전관리지도사1급']
   },
   {
     label: '★필수★\n 아동복지분야',
-    options: ['지역아동교육지도사', '방과후돌봄교실지도사', '방과후학교지도사', '진로적성상담사', '심리상담사']
+    options: ['지역아동교육지도사1급', '방과후돌봄교실지도사1급', '방과후학교지도사1급', '진로적성상담사1급/인성지도사', '심리상담사1급']
   },
     {
     label: '★필수★\n 노인복지분야',
-    options: ['진로적성상담사', '심리상담사', '독서지도사', '학교폭력예방상담사', '인성지도사']
+    options: ['진로적성상담사1급/인성지도사', '심리상담사1급', '독서지도사1급', '학교폭력예방상담사1급', '인성지도사1급']
   },
   {
     label: '사회복지 ',
@@ -99,12 +99,29 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         .replace(/_+/g, '_'); // 연속된 언더스코어는 하나로
     }
   const handleCertToggle = (cert: string) => {
-    setFormData(prev => ({
-      ...prev,
-      certificates: prev.certificates.includes(cert)
+    setFormData(prev => {
+      const isSelected = prev.certificates.includes(cert);
+      let newCerts = isSelected
         ? prev.certificates.filter(c => c !== cert)
-        : [...prev.certificates, cert]
-    }));
+        : [...prev.certificates, cert];
+
+      // 같은 자격증이 다른 카테고리에 있는지 확인하고 함께 처리
+      if (!isSelected) {
+        // 선택 시: 같은 자격증이 다른 카테고리에 있으면 모두 추가
+        CERTIFICATE_CATEGORIES.forEach(cat => {
+          if (cat.options.includes(cert) && !newCerts.includes(cert)) {
+            if (!newCerts.includes(cert)) {
+              newCerts.push(cert);
+            }
+          }
+        });
+      } else {
+        // 해제 시: 같은 자격증 모두 제거
+        newCerts = newCerts.filter(c => c !== cert);
+      }
+
+      return { ...prev, certificates: [...new Set(newCerts)] };
+    });
   };
 
   // 연락처 포맷팅 함수 (010-XXXX-XXXX 형식)
@@ -476,7 +493,12 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             {/* 선택된 자격증 표시 (모달 하단, 전체 너비) */}
             <div className={styles.selectedCertContainer}>
               <div className={styles.selectedCertLabel}>
-                선택한 자격증 <span className={styles.selectedCertCount}>  {formData.certificates.length}</span>
+                <span>
+                  선택한 자격증 <span className={styles.selectedCertCount}>{formData.certificates.length}</span>
+                </span>
+                <span className={styles.selectedCertPrice}>
+                  총 <span className={styles.selectedCertPriceNumber}>{(formData.certificates.length * 100000).toLocaleString()}</span> 원
+                </span>
               </div>
               <div className={styles.selectedCertList}>
                 {formData.certificates.map(cert => (
