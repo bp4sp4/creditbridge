@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 /**
  * PayApp 결제 웹훅
@@ -33,16 +33,18 @@ export async function POST(request: NextRequest) {
     // 데이터베이스에 결제 정보 저장
     if (state === '1') {
       // 결제 성공
-      const { error: updateError } = await supabase
-        .from('orders')
+      const { error: updateError, data: appData } = await supabase
+        .from('certificate_applications')
         .update({
-          status: 'paid',
+          payment_status: 'paid',
           trade_id: tradeid,
           mul_no: mul_no,
           pay_method: paymethod,
           paid_at: new Date().toISOString()
         })
-        .eq('order_id', var1);
+        .eq('order_id', var1)
+        .select()
+        .single();
 
       if (updateError) {
         console.error('Database update error:', updateError);
@@ -50,15 +52,9 @@ export async function POST(request: NextRequest) {
       }
 
       // 결제 성공 로그
-      const { data: order } = await supabase
-        .from('orders')
-        .select('id')
-        .eq('order_id', var1)
-        .single();
-
-      if (order) {
+      if (appData) {
         await supabase.from('payment_logs').insert({
-          order_id: order.id,
+          app_id: appData.id,
           action: 'payment_success',
           amount: price,
           response_data: body
@@ -68,33 +64,27 @@ export async function POST(request: NextRequest) {
       // TODO: 결제 완료 이메일 발송, SMS 알림 등의 추가 작업
     } else {
       // 결제 실패
-      const { error: updateError } = await supabase
-        .from('orders')
+      const { error: updateError, data: appData } = await supabase
+        .from('certificate_applications')
         .update({
-          status: 'failed',
+          payment_status: 'failed',
           failed_message: message,
           failed_at: new Date().toISOString()
         })
-        .eq('order_id', var1);
+        .eq('order_id', var1)
+        .select()
+        .single();
 
       if (updateError) {
         console.error('Database update error:', updateError);
-      } else {
+      } else if (appData) {
         // 결제 실패 로그
-        const { data: order } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('order_id', var1)
-          .single();
-
-        if (order) {
-          await supabase.from('payment_logs').insert({
-            order_id: order.id,
-            action: 'payment_failed',
-            error_message: message,
-            response_data: body
-          });
-        }
+        await supabase.from('payment_logs').insert({
+          app_id: appData.id,
+          action: 'payment_failed',
+          error_message: message,
+          response_data: body
+        });
       }
     }
 

@@ -3,7 +3,9 @@
     "allow": [
       "WebFetch(domain:www.payapp.kr)",
       "WebFetch(domain:supabase.com)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(find:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }
