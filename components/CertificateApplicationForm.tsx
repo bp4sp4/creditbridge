@@ -591,9 +591,9 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 />
                 <div style={{ fontSize: '12px', color: '#8b95a1', marginTop: '8px', textAlign: 'center' }}>
                   {formData.photo ? (
-                    <span>✓ {formData.photo.name} 선택됨</span>
+                    <span>✓ {formData.photo.name}</span>
                   ) : (
-                    <span>클릭하여 사진을 선택해주세요</span>
+                    <span>선택 (없어도 됨)</span>
                   )}
                 </div>
                 {formData.photo && (
