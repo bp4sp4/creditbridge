@@ -247,7 +247,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                           sessionStorage.removeItem('paymentProcessing');
                           paymentWindow.close();
                           // 즉시 부모 페이지 이동 (로딩 스크린 표시됨)
-                          window.location.href = '/?payment=success&step=3';
+                          window.location.href = window.location.pathname + '?payment=success&step=3';
                         }
                       }
                     } catch (e) {
@@ -259,7 +259,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                           sessionStorage.removeItem('paymentProcessing');
                           paymentWindow.close();
                           // 즉시 부모 페이지 이동 (로딩 스크린 표시됨)
-                          window.location.href = '/?payment=success&step=3';
+                          window.location.href = window.location.pathname + '?payment=success&step=3';
                         }
                       }
                     }
@@ -270,7 +270,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     if (!popupClosing) {
                       popupClosing = true;
                       sessionStorage.removeItem('paymentProcessing');
-                      window.location.href = '/?payment=success&step=3';
+                      window.location.href = window.location.pathname + '?payment=success&step=3';
                     }
                   }
 
@@ -281,7 +281,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     if (!popupClosing) {
                       popupClosing = true;
                       sessionStorage.removeItem('paymentProcessing');
-                      window.location.href = '/?payment=success&step=3';
+                      window.location.href = window.location.pathname + '?payment=success&step=3';
                     }
                   }
                 } catch (err) {
@@ -330,7 +330,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         sessionStorage.removeItem('paymentProcessing');
         sessionStorage.setItem('paymentProcessed', 'true');
         // URL 파라미터 제거 (먼저 처리)
-        window.history.replaceState({}, '', '/');
+        window.history.replaceState({}, '', window.location.pathname);
         setStep(3);
         setIsInitializing(false);
       } else if (paymentParam === 'failed' && !hasProcessedPayment) {
@@ -340,7 +340,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         const orderId = params.get('orderId');
         const message = params.get('message');
         // URL 파라미터 제거 (먼저 처리)
-        window.history.replaceState({}, '', '/');
+        window.history.replaceState({}, '', window.location.pathname);
         alert(`결제가 실패했습니다.\n${message || '다시 시도해주세요.'}`);
         setIsInitializing(false);
       } else {
