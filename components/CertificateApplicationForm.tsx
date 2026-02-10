@@ -183,6 +183,11 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
 
       // 서버 엔드포인트로 PayApp 결제 요청 (CORS 우회)
       try {
+        // 결제 처리 중 상태 저장 (중복 이동 방지)
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('paymentProcessing', 'true');
+        }
+
         const paymentResponse = await fetch('/api/payments', {
           method: 'POST',
           headers: {
@@ -202,84 +207,101 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         setLoading(false);
 
         if (responseData.success && responseData.data?.payurl) {
-          // 결제창을 팝업으로 열기
-          const paymentWindow = window.open(
-            responseData.data.payurl,
-            'payapp_payment',
-            'width=500,height=700,left=200,top=100'
-          );
+          // 모바일 기기 감지
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-          if (!paymentWindow) {
-            // 팝업 차단된 경우 새 탁으로 열기
+          if (isMobile) {
+            // 모바일: 직접 결제 페이지로 이동 (팝업 불가)
             window.location.href = responseData.data.payurl;
           } else {
-            // 팝업이 결제를 완료한 후 닫힐 때까지 체크 (최대 60초)
-            let checkCount = 0;
-            const maxChecks = 120; // 60초 (500ms * 120)
-            let popupClosing = false;
+            // 데스크톱: 팝업으로 결제창 열기
+            const paymentWindow = window.open(
+              responseData.data.payurl,
+              'payapp_payment',
+              'width=500,height=700,left=200,top=100'
+            );
 
-            const checkPopupClosed = setInterval(() => {
-              checkCount++;
+            if (!paymentWindow) {
+              // 팝업 차단된 경우 새 탭으로 열기
+              window.location.href = responseData.data.payurl;
+            } else {
+              // 팝업이 결제를 완료한 후 닫힐 때까지 체크 (최대 120초)
+              let checkCount = 0;
+              const maxChecks = 240; // 120초 (500ms * 240)
+              let popupClosing = false;
 
-              try {
-                // 팝업의 URL 확인 (팝업이 결제 완료 페이지로 이동했는지 확인)
-                if (paymentWindow && !paymentWindow.closed) {
-                  try {
-                    // 크로스도메인 체크 - 같은 도메인이면 URL 확인 가능
-                    const popupUrl = paymentWindow.location.href;
-                    if (popupUrl.includes('?payment=success') || popupUrl.includes('api/payments/result')) {
-                      // 결제 완료 페이지 도달 - 팝업 닫기 신호 전송
-                      if (!popupClosing) {
-                        popupClosing = true;
-                        console.log('Payment completed, closing popup');
-                        paymentWindow.close();
-                        // 즉시 부모 페이지 이동 (로딩 스크린 표시됨)
-                        window.location.href = '/?payment=success&step=3';
+              const checkPopupClosed = setInterval(() => {
+                checkCount++;
+
+                try {
+                  // 팝업의 URL 확인 (팝업이 결제 완료 페이지로 이동했는지 확인)
+                  if (paymentWindow && !paymentWindow.closed) {
+                    try {
+                      // 크로스도메인 체크 - 같은 도메인이면 URL 확인 가능
+                      const popupUrl = paymentWindow.location.href;
+                      if (popupUrl.includes('?payment=success') || popupUrl.includes('api/payments/result')) {
+                        // 결제 완료 페이지 도달 - 팝업 닫기 신호 전송
+                        if (!popupClosing) {
+                          popupClosing = true;
+                          console.log('Payment completed, closing popup');
+                          sessionStorage.removeItem('paymentProcessing');
+                          paymentWindow.close();
+                          // 즉시 부모 페이지 이동 (로딩 스크린 표시됨)
+                          window.location.href = '/?payment=success&step=3';
+                        }
+                      }
+                    } catch (e) {
+                      // 크로스도메인 에러 - 시간 기반으로 체크
+                      if (checkCount >= 80) { // 약 40초 후
+                        if (!popupClosing) {
+                          popupClosing = true;
+                          console.log('Timeout reached, closing popup');
+                          sessionStorage.removeItem('paymentProcessing');
+                          paymentWindow.close();
+                          // 즉시 부모 페이지 이동 (로딩 스크린 표시됨)
+                          window.location.href = '/?payment=success&step=3';
+                        }
                       }
                     }
-                  } catch (e) {
-                    // 크로스도메인 에러 - 시간 기반으로 체크
-                    if (checkCount >= 40) { // 약 20초 후
-                      if (!popupClosing) {
-                        popupClosing = true;
-                        console.log('Timeout reached, closing popup');
-                        paymentWindow.close();
-                        // 즉시 부모 페이지 이동 (로딩 스크린 표시됨)
-                        window.location.href = '/?payment=success&step=3';
-                      }
+                  } else if (paymentWindow && paymentWindow.closed) {
+                    // 팝업이 이미 닫혔으면 부모 페이지 이동
+                    clearInterval(checkPopupClosed);
+                    console.log('Popup already closed, navigating to step 3');
+                    if (!popupClosing) {
+                      popupClosing = true;
+                      sessionStorage.removeItem('paymentProcessing');
+                      window.location.href = '/?payment=success&step=3';
                     }
                   }
-                } else if (paymentWindow && paymentWindow.closed) {
-                  // 팝업이 이미 닫혔으면 부모 페이지 이동
-                  clearInterval(checkPopupClosed);
-                  console.log('Popup already closed, navigating to step 3');
-                  if (!popupClosing) {
-                    popupClosing = true;
-                    window.location.href = '/?payment=success&step=3';
-                  }
-                }
 
-                // 최대 시간 초과
-                if (checkCount >= maxChecks) {
-                  clearInterval(checkPopupClosed);
-                  console.log('Max checks reached, navigating to step 3');
-                  window.location.href = '/?payment=success&step=3';
+                  // 최대 시간 초과
+                  if (checkCount >= maxChecks) {
+                    clearInterval(checkPopupClosed);
+                    console.log('Max checks reached, navigating to step 3');
+                    if (!popupClosing) {
+                      popupClosing = true;
+                      sessionStorage.removeItem('paymentProcessing');
+                      window.location.href = '/?payment=success&step=3';
+                    }
+                  }
+                } catch (err) {
+                  console.error('Error checking popup:', err);
                 }
-              } catch (err) {
-                console.error('Error checking popup:', err);
-              }
-            }, 500);
+              }, 500);
+            }
           }
         } else {
           throw new Error(responseData.error || '결제 요청 실패');
         }
       } catch (err: any) {
         setLoading(false);
+        sessionStorage.removeItem('paymentProcessing');
         throw new Error(`결제 요청 실패: ${err.message}`);
       }
 
     } catch (err: any) {
       alert('오류가 발생했습니다: ' + err.message);
+      sessionStorage.removeItem('paymentProcessing');
       setLoading(false);
     }
   };
@@ -298,14 +320,20 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
 
       console.log('URL params detected:', { stepParam, paymentParam, search: window.location.search });
 
+      // 결제 중 상태 확인 (중복 이동 방지)
+      const isPaymentProcessing = sessionStorage.getItem('paymentProcessing') === 'true';
+
+      // 결제 중이 아니고, step=3이 감지되었으면 결제 완료로 간주
       if (stepParam === '3') {
-        console.log('Setting step to 3');
+        console.log('Setting step to 3 - Payment completed');
+        sessionStorage.removeItem('paymentProcessing');
         setStep(3);
         setIsInitializing(false);
         // URL 파라미터 제거 (즉시)
         window.history.replaceState({}, '', '/');
       } else if (paymentParam === 'failed') {
         // 결제 실패 처리
+        sessionStorage.removeItem('paymentProcessing');
         const orderId = params.get('orderId');
         const message = params.get('message');
         alert(`결제가 실패했습니다.\n${message || '다시 시도해주세요.'}`);
