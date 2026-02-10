@@ -462,11 +462,11 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     const numbers = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
                     setFormData({ ...formData, birth_prefix: numbers });
                   }}
-                  placeholder="981027"
+                  placeholder="YYMMDD (예: 194508)"
                 />
                 {formData.birth_prefix && formData.birth_prefix.length !== 6 && (
                   <p style={{ color: '#b45309', fontSize: '12px', marginTop: '4px' }}>
-                    6자리 숫자를 입력해주세요 (예: 981027)
+                    6자리 숫자를 입력해주세요 (예: 194508)
                   </p>
                 )}
                 {formData.birth_prefix && formData.birth_prefix.length === 6 && (
