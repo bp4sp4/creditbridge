@@ -523,7 +523,15 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                   }}
                 />
                 {formData.addressMain && (
-                  <div style={{ marginTop: 12 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                    <input
+                      type="text"
+                      className={styles.inputField}
+                      value={`${formData.postalCode} ${formData.addressMain}`}
+                      readOnly
+                      tabIndex={-1}
+                      style={{ backgroundColor: '#f9fafb' }}
+                    />
                     <input
                       type="text"
                       className={styles.inputField}
