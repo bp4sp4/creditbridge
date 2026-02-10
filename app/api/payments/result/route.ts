@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
     const var1 = searchParams.get('var1'); // 우리가 보낸 주문번호
     const message = searchParams.get('message'); // 결과 메시지
 
-    // 결제 성공 여부 확인
-    if (state === '1') {
+    // 결제 성공 여부 확인 (state가 '1'이거나 mul_no가 있으면 성공)
+    if (state === '1' || (state === null && mul_no)) {
       // 데이터베이스 업데이트 - 결제 성공 (certificate_applications 테이블)
       const { error: updateError, data: appData } = await supabase
         .from('certificate_applications')
@@ -104,8 +104,8 @@ export async function POST(request: NextRequest) {
     const message = params.get('message'); // 메시지
     const price = params.get('price'); // 결제 금액
 
-    // 데이터베이스에 결제 결과 저장
-    if (state === '1') {
+    // 데이터베이스에 결제 결과 저장 (state가 '1'이거나 mul_no가 있으면 성공)
+    if (state === '1' || (state === null && mul_no)) {
       const { error: updateError, data: appData } = await supabase
         .from('certificate_applications')
         .update({

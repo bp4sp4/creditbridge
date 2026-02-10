@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
     });
 
     // 데이터베이스에 결제 정보 저장
-    if (state === '1') {
+    // state가 '1'이면 성공 (mul_no가 있으면 충분)
+    if (state === '1' || (state === null && mul_no)) {
       // 결제 성공
       const { error: updateError, data: appData } = await supabase
         .from('certificate_applications')
