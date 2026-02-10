@@ -53,9 +53,9 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // 모바일: 데이터베이스 업데이트 후 step3로 리다이렉트
+      // 모바일: 데이터베이스 업데이트 후 결제 성공 페이지로 리다이렉트
       if (isMobile) {
-        return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
+        return NextResponse.redirect(new URL('/payment-success', request.url));
       }
 
       // 데스크톱: 결제 완료 후 부모 페이지로 이동
@@ -217,9 +217,9 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // 모바일: 데이터베이스 업데이트 후 step3로 리다이렉트
+      // 모바일: 데이터베이스 업데이트 후 결제 성공 페이지로 리다이렉트
       if (isMobile) {
-        return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
+        return NextResponse.redirect(new URL('/payment-success', request.url));
       }
 
       // 데스크톱: 결제 완료 후 부모 페이지로 이동
