@@ -454,6 +454,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 </label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   className={styles.inputField}
                   style={{
                     borderColor: formData.contact && !isPhoneValid ? '#ef4444' : undefined,
@@ -479,6 +480,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 </label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   maxLength={6}
                   className={styles.inputField}
                   style={{
