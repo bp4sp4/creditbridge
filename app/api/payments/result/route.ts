@@ -91,89 +91,102 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  // POST로도 결과를 받을 수 있도록 처리
+  // PayApp이 form-urlencoded로 전송하는 경우 처리
   try {
-    const body = await request.json();
+    const body = await request.text();
+    const params = new URLSearchParams(body);
     const supabase = createClient();
 
-    const state = body.state; // 1: 성공, 0: 실패
-    const tradeid = body.tradeid; // 거래번호
-    const mul_no = body.mul_no; // 결제 요청번호
-    const var1 = body.var1; // 주문번호
-    const message = body.message; // 메시지
+    const state = params.get('state'); // 1: 성공, 0: 실패
+    const tradeid = params.get('tradeid'); // 거래번호
+    const mul_no = params.get('mul_no'); // 결제 요청번호
+    const var1 = params.get('var1'); // 주문번호
+    const message = params.get('message'); // 메시지
+    const price = params.get('price'); // 결제 금액
 
     // 데이터베이스에 결제 결과 저장
     if (state === '1') {
-      const { error: updateError } = await supabase
-        .from('orders')
+      const { error: updateError, data: appData } = await supabase
+        .from('certificate_applications')
         .update({
-          status: 'paid',
+          payment_status: 'paid',
           trade_id: tradeid,
           mul_no: mul_no,
           paid_at: new Date().toISOString()
         })
-        .eq('order_id', var1);
+        .eq('order_id', var1)
+        .select()
+        .single();
 
       if (updateError) {
         console.error('Database update error:', updateError);
-      } else {
-        // 결제 성공 로그
-        const { data: order } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('order_id', var1)
-          .single();
-
-        if (order) {
-          await supabase.from('payment_logs').insert({
-            order_id: order.id,
-            action: 'payment_success',
-            amount: body.price,
-            response_data: body
-          });
-        }
+        return NextResponse.json(
+          { success: false, error: updateError.message },
+          { status: 500 }
+        );
       }
+
+      if (appData) {
+        // 결제 성공 로그
+        await supabase.from('payment_logs').insert({
+          app_id: appData.id,
+          action: 'payment_success',
+          amount: parseInt(price || '0'),
+          response_data: Object.fromEntries(params)
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: '결제가 완료되었습니다.',
+        data: {
+          tradeid,
+          mul_no,
+          orderId: var1,
+          status: 'paid'
+        }
+      });
     } else {
-      const { error: updateError } = await supabase
-        .from('orders')
+      const { error: updateError, data: appData } = await supabase
+        .from('certificate_applications')
         .update({
-          status: 'failed',
+          payment_status: 'failed',
           failed_at: new Date().toISOString(),
           failed_message: message
         })
-        .eq('order_id', var1);
+        .eq('order_id', var1)
+        .select()
+        .single();
 
       if (updateError) {
         console.error('Database update error:', updateError);
-      } else {
+        return NextResponse.json(
+          { success: false, error: updateError.message },
+          { status: 500 }
+        );
+      }
+
+      if (appData) {
         // 결제 실패 로그
-        const { data: order } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('order_id', var1)
-          .single();
+        await supabase.from('payment_logs').insert({
+          app_id: appData.id,
+          action: 'payment_failed',
+          error_message: message,
+          response_data: Object.fromEntries(params)
+        });
+      }
 
-        if (order) {
-          await supabase.from('payment_logs').insert({
-            order_id: order.id,
-            action: 'payment_failed',
-            error_message: message,
-            response_data: body
-          });
+      return NextResponse.json({
+        success: false,
+        message: message || '결제가 실패했습니다.',
+        data: {
+          tradeid,
+          mul_no,
+          orderId: var1,
+          status: 'failed'
         }
-      }
+      });
     }
-
-    return NextResponse.json({
-      success: state === '1',
-      message: state === '1' ? '결제가 완료되었습니다.' : message,
-      data: {
-        tradeid,
-        mul_no,
-        orderId: var1,
-        status: state === '1' ? 'paid' : 'failed'
-      }
-    });
   } catch (error) {
     console.error('Payment result POST error:', error);
     return NextResponse.json(
