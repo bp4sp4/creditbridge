@@ -136,16 +136,8 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      return NextResponse.json({
-        success: true,
-        message: '결제가 완료되었습니다.',
-        data: {
-          tradeid,
-          mul_no,
-          orderId: var1,
-          status: 'paid'
-        }
-      });
+      // Step 3 (결제 완료 페이지)로 리다이렉트
+      return NextResponse.redirect(new URL(`/?payment=success&step=3`, request.url));
     } else {
       const { error: updateError, data: appData } = await supabase
         .from('certificate_applications')
@@ -176,16 +168,8 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      return NextResponse.json({
-        success: false,
-        message: message || '결제가 실패했습니다.',
-        data: {
-          tradeid,
-          mul_no,
-          orderId: var1,
-          status: 'failed'
-        }
-      });
+      // 결제 실패 - Step 2로 돌아가기
+      return NextResponse.redirect(new URL(`/?payment=failed&orderId=${var1}&message=${encodeURIComponent(message || '결제 실패')}`, request.url));
     }
   } catch (error) {
     console.error('Payment result POST error:', error);
