@@ -200,7 +200,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             (window as any).PayApp.setDefault('feedbackurl', `${window.location.origin}/api/payments/webhook`);
             (window as any).PayApp.setDefault('redirectpay', '1'); // 결제창으로 바로 이동
 
-            // 결제 요청 - redirectpay=1로 설정하면 결제창으로 즉시 이동
+            // 결제 요청 - skip_cstpage='y'로 매출전표 페이지 스킵, 바로 결제 페이지로 이동
             (window as any).PayApp.payrequest({
               goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
               price: amount.toString(),
@@ -208,7 +208,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               recvname: formData.name,
               var1: orderId,
               returnurl: `${window.location.origin}/api/payments/result`,
-              redirectpay: '1' // 이 파라미터가 결제창으로 바로 이동하게 함
+              redirectpay: '1', // 결제창으로 바로 이동
+              skip_cstpage: 'y' // 매출전표 페이지 스킵 (첫 번째 팝업 건너뜀)
             });
 
             setLoading(false);
