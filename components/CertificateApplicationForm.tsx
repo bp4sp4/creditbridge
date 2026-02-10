@@ -194,20 +194,21 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           if ((window as any).PayApp) {
             clearInterval(waitForPayApp);
 
-            // PayApp 파라미터 설정
+            // PayApp 파라미터 설정 (고정값)
             (window as any).PayApp.setDefault('userid', payappUserId);
             (window as any).PayApp.setDefault('shopname', payappShopName);
             (window as any).PayApp.setDefault('feedbackurl', `${window.location.origin}/api/payments/webhook`);
             (window as any).PayApp.setDefault('redirectpay', '1'); // 결제창으로 바로 이동
 
-            // 결제 요청
+            // 결제 요청 - redirectpay=1로 설정하면 결제창으로 즉시 이동
             (window as any).PayApp.payrequest({
               goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
               price: amount.toString(),
               recvphone: formData.contact,
               recvname: formData.name,
               var1: orderId,
-              returnurl: `${window.location.origin}/api/payments/result`
+              returnurl: `${window.location.origin}/api/payments/result`,
+              redirectpay: '1' // 이 파라미터가 결제창으로 바로 이동하게 함
             });
 
             setLoading(false);
