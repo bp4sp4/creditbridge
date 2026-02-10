@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../lib/supabase/client';
-import { cancelPayment, requestPaymentCancellation } from '../../../lib/payapp';
+import { createClient } from '@/lib/supabase/client';
+import { cancelPayment, requestPaymentCancellation } from '@/lib/payapp';
 
 /**
  * 결제 취소 요청

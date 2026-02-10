@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 // 결제 요청 생성
 export async function POST(request: NextRequest) {
