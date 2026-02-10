@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '../lib/supabase/client';
 
@@ -180,29 +180,54 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
 
       if (insertError) throw insertError;
 
-      // PayApp 결제 페이지로 직접 이동
-      const payappUserId = process.env.NEXT_PUBLIC_PAYAPP_USER_ID || 'korhrdcorp';
-      const payappShopName = process.env.NEXT_PUBLIC_PAYAPP_SHOP_NAME || '한평생교육';
-      const payappLinkKey = process.env.NEXT_PUBLIC_PAYAPP_LINK_KEY || '';
+      // PayApp JS API 로드
+      const script = document.createElement('script');
+      script.src = 'https://lite.payapp.kr/public/api/v2/payapp-lite.js';
+      script.async = true;
+      script.onload = () => {
+        // PayApp JS SDK가 로드된 후 결제 요청
+        const payappUserId = process.env.NEXT_PUBLIC_PAYAPP_USER_ID || 'korhrdcorp';
+        const payappShopName = process.env.NEXT_PUBLIC_PAYAPP_SHOP_NAME || '한평생교육';
 
-      // PayApp 결제 URL 생성
-      const payappParams = new URLSearchParams({
-        userid: payappUserId,
-        linkkey: payappLinkKey || '',
-        shopname: payappShopName,
-        goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
-        price: amount.toString(),
-        recvphone: formData.contact,
-        recvname: formData.name,
-        var1: orderId,
-        returnurl: `${window.location.origin}/api/payments/result`,
-        feedbackurl: `${window.location.origin}/api/payments/webhook`
-      });
+        // window.PayApp이 정의될 때까지 대기
+        const waitForPayApp = setInterval(() => {
+          if ((window as any).PayApp) {
+            clearInterval(waitForPayApp);
 
-      const paymentUrl = `https://api.payapp.kr/order/order_pay.php?${payappParams.toString()}`;
+            // PayApp 파라미터 설정
+            (window as any).PayApp.setDefault('userid', payappUserId);
+            (window as any).PayApp.setDefault('shopname', payappShopName);
+            (window as any).PayApp.setDefault('feedbackurl', `${window.location.origin}/api/payments/webhook`);
+            (window as any).PayApp.setDefault('redirectpay', '1'); // 결제창으로 바로 이동
 
-      // PayApp 결제 페이지로 리다이렉트
-      window.location.href = paymentUrl;
+            // 결제 요청
+            (window as any).PayApp.payrequest({
+              goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
+              price: amount.toString(),
+              recvphone: formData.contact,
+              recvname: formData.name,
+              var1: orderId,
+              returnurl: `${window.location.origin}/api/payments/result`
+            });
+
+            setLoading(false);
+          }
+        }, 100);
+
+        // 5초 타임아웃
+        setTimeout(() => {
+          clearInterval(waitForPayApp);
+          if (!(window as any).PayApp) {
+            throw new Error('PayApp SDK 로드 실패');
+          }
+        }, 5000);
+      };
+
+      script.onerror = () => {
+        throw new Error('PayApp SDK 로드 실패');
+      };
+
+      document.head.appendChild(script);
 
     } catch (err: any) {
       alert('오류가 발생했습니다: ' + err.message);
@@ -216,15 +241,25 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   const isFormValid = formData.name && isPhoneValid && formData.birth_prefix.length === 6 && formData.addressMain && formData.certificates.length > 0 && privacyAgreed;
 
   // 결제 완료 후 URL 파라미터에서 step 감지
-  if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    const stepParam = params.get('step');
-    if (stepParam === '3' && step !== 3) {
-      setStep(3);
-      // URL 파라미터 제거
-      window.history.replaceState({}, '', '/');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const stepParam = params.get('step');
+      const paymentParam = params.get('payment');
+
+      if (stepParam === '3' && step !== 3) {
+        setStep(3);
+        // URL 파라미터 제거
+        window.history.replaceState({}, '', '/');
+      }
+
+      // 결제 실패 처리
+      if (paymentParam === 'failed') {
+        alert('결제가 실패했습니다. 다시 시도해주세요.');
+        window.history.replaceState({}, '', '/');
+      }
     }
-  }
+  }, [step]);
 
   return (
     <div className={styles.container}>
