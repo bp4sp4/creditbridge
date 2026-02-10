@@ -61,7 +61,7 @@ export default function AdminLoginPage() {
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '360px',
+        maxWidth: '500px',
         padding: '0 20px'
       }}>
         {/* 헤더 */}
