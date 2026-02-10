@@ -200,7 +200,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             (window as any).PayApp.setDefault('feedbackurl', `${window.location.origin}/api/payments/webhook`);
             (window as any).PayApp.setDefault('redirectpay', '1'); // 결제창으로 바로 이동
 
-            // 결제 요청 - skip_cstpage='y'로 매출전표 페이지 스킵, 바로 결제 페이지로 이동
+            // 결제 요청 - 결제 완료 후 매출전표 페이지 스킵하고 바로 returnurl로 이동
             (window as any).PayApp.payrequest({
               goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
               price: amount.toString(),
@@ -209,7 +209,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               var1: orderId,
               returnurl: `${window.location.origin}/api/payments/result`,
               redirectpay: '1', // 결제창으로 바로 이동
-              skip_cstpage: 'y' // 매출전표 페이지 스킵 (첫 번째 팝업 건너뜀)
+              redirect: '_self', // 현재 창에서 리다이렉트
+              skip_cstpage: 'y' // 매출전표 페이지 스킵 후 returnurl로 POST 이동
             });
 
             setLoading(false);
@@ -249,7 +250,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
       const stepParam = params.get('step');
       const paymentParam = params.get('payment');
 
-      if (stepParam === '3' && step !== 3) {
+      if (stepParam === '3') {
         setStep(3);
         // URL 파라미터 제거
         window.history.replaceState({}, '', '/');
@@ -257,11 +258,13 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
 
       // 결제 실패 처리
       if (paymentParam === 'failed') {
-        alert('결제가 실패했습니다. 다시 시도해주세요.');
+        const orderId = params.get('orderId');
+        const message = params.get('message');
+        alert(`결제가 실패했습니다.\n${message || '다시 시도해주세요.'}`);
         window.history.replaceState({}, '', '/');
       }
     }
-  }, [step]);
+  }, []);
 
   return (
     <div className={styles.container}>
