@@ -8,18 +8,20 @@ import { createClient } from '@/lib/supabase/client';
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // PayApp은 form-urlencoded로 전송하므로 body를 text로 파싱
+    const body = await request.text();
+    const params = new URLSearchParams(body);
     const supabase = createClient();
 
-    const state = body.state; // 1: 성공, 0: 실패
-    const tradeid = body.tradeid; // 거래번호
-    const mul_no = body.mul_no; // 결제 요청번호
-    const var1 = body.var1; // 주문번호
-    const price = body.price; // 결제 금액
-    const shopname = body.shopname; // 상점명
-    const goodname = body.goodname; // 상품명
-    const message = body.message; // 메시지
-    const paymethod = body.paymethod; // 결제수단
+    const state = params.get('state'); // 1: 성공, 0: 실패
+    const tradeid = params.get('tradeid'); // 거래번호
+    const mul_no = params.get('mul_no'); // 결제 요청번호
+    const var1 = params.get('var1'); // 주문번호
+    const price = params.get('price'); // 결제 금액
+    const shopname = params.get('shopname'); // 상점명
+    const goodname = params.get('goodname'); // 상품명
+    const message = params.get('message'); // 메시지
+    const paymethod = params.get('paymethod'); // 결제수단
 
     console.log('Payment webhook received:', {
       state,
@@ -48,7 +50,8 @@ export async function POST(request: NextRequest) {
 
       if (updateError) {
         console.error('Database update error:', updateError);
-        return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
+        // 실패 시 "SUCCESS" 대신 빈 응답으로 재시도 유도
+        return new NextResponse('FAIL', { status: 200 });
       }
 
       // 결제 성공 로그
@@ -56,12 +59,17 @@ export async function POST(request: NextRequest) {
         await supabase.from('payment_logs').insert({
           app_id: appData.id,
           action: 'payment_success',
-          amount: price,
-          response_data: body
+          amount: parseInt(price || '0'),
+          response_data: Object.fromEntries(params)
         });
       }
 
-      // TODO: 결제 완료 이메일 발송, SMS 알림 등의 추가 작업
+      // PayApp 매뉴얼: feedbackurl에서 반드시 "SUCCESS" 응답 필수
+      return new NextResponse('SUCCESS', {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      });
+
     } else {
       // 결제 실패
       const { error: updateError, data: appData } = await supabase
@@ -77,30 +85,30 @@ export async function POST(request: NextRequest) {
 
       if (updateError) {
         console.error('Database update error:', updateError);
+        return new NextResponse('FAIL', { status: 200 });
       } else if (appData) {
         // 결제 실패 로그
         await supabase.from('payment_logs').insert({
           app_id: appData.id,
           action: 'payment_failed',
           error_message: message,
-          response_data: body
+          response_data: Object.fromEntries(params)
         });
       }
-    }
 
-    // PayApp에 처리 완료 응답 (200 OK 필수)
-    return NextResponse.json({
-      success: state === '1',
-      message: '웹훅 처리 완료',
-      orderId: var1,
-      status: state === '1' ? 'paid' : 'failed'
-    });
+      // 결제 실패도 SUCCESS로 응답 (DB 업데이트 완료했으므로)
+      return new NextResponse('SUCCESS', {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      });
+    }
 
   } catch (error) {
     console.error('Payment webhook error:', error);
-    return NextResponse.json(
-      { success: false, error: '웹훅 처리 중 오류가 발생했습니다.' },
-      { status: 500 }
-    );
+    // 에러 발생 시 FAIL 응답으로 재시도 유도
+    return new NextResponse('FAIL', {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    });
   }
 }
