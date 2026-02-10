@@ -21,12 +21,6 @@ export async function GET(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || '';
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
-    // 데이터베이스 업데이트 전에 모바일인 경우 바로 리다이렉트
-    if (isMobile) {
-      // 모바일: step3로 리다이렉트
-      return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
-    }
-
     // 결제 성공 여부 확인 (state가 '1'이거나 mul_no가 있으면 성공)
     if (state === '1' || (state === null && mul_no)) {
       // 데이터베이스 업데이트 - 결제 성공 (certificate_applications 테이블)
@@ -57,6 +51,11 @@ export async function GET(request: NextRequest) {
             message
           }
         });
+      }
+
+      // 모바일: 데이터베이스 업데이트 후 step3로 리다이렉트
+      if (isMobile) {
+        return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
       }
 
       // 데스크톱: 결제 완료 후 부모 페이지로 이동
@@ -126,6 +125,11 @@ export async function GET(request: NextRequest) {
         });
       }
 
+      // 모바일: 홈으로 리다이렉트 (결제 재시도 가능)
+      if (isMobile) {
+        return NextResponse.redirect(new URL('/?payment=failed', request.url));
+      }
+
       // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
       const failHtml = `
         <html>
@@ -181,11 +185,6 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || '';
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
-    if (isMobile) {
-      // 모바일: step3로 리다이렉트
-      return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
-    }
-
     // 데이터베이스에 결제 결과 저장 (state가 '1'이거나 mul_no가 있으면 성공)
     if (state === '1' || (state === null && mul_no)) {
       const { error: updateError, data: appData } = await supabase
@@ -216,6 +215,11 @@ export async function POST(request: NextRequest) {
           amount: parseInt(price || '0'),
           response_data: Object.fromEntries(params)
         });
+      }
+
+      // 모바일: 데이터베이스 업데이트 후 step3로 리다이렉트
+      if (isMobile) {
+        return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
       }
 
       // 데스크톱: 결제 완료 후 부모 페이지로 이동
@@ -283,6 +287,11 @@ export async function POST(request: NextRequest) {
           error_message: message,
           response_data: Object.fromEntries(params)
         });
+      }
+
+      // 모바일: 홈으로 리다이렉트 (결제 재시도 가능)
+      if (isMobile) {
+        return NextResponse.redirect(new URL('/?payment=failed', request.url));
       }
 
       // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
