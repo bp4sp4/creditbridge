@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
       }
 
-      // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
+      // 데스크톱: 결제 완료 후 부모 페이지로 이동
       const html = `
         <html>
           <head>
@@ -73,12 +73,19 @@ export async function GET(request: NextRequest) {
           <body>
             <div class="container">
               <h1>✓ 결제가 완료되었습니다!</h1>
-              <p>잠시 후 창이 자동으로 닫힙니다...</p>
+              <p>잠시 후 페이지가 이동됩니다...</p>
             </div>
             <script>
-              // 3초 후 팝업 자동 닫기
+              // 3초 후 부모 페이지로 이동
               setTimeout(() => {
-                window.close();
+                if (window.opener) {
+                  // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
+                  window.opener.location.href = '/?payment=success&step=3';
+                  window.close();
+                } else {
+                  // 팝업 아닌 경우: 직접 이동
+                  window.location.href = '/?payment=success&step=3';
+                }
               }, 3000);
             </script>
           </body>
@@ -219,7 +226,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
       }
 
-      // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
+      // 데스크톱: 결제 완료 후 부모 페이지로 이동
       const html = `
         <html>
           <head>
@@ -234,12 +241,19 @@ export async function POST(request: NextRequest) {
           <body>
             <div class="container">
               <h1>✓ 결제가 완료되었습니다!</h1>
-              <p>잠시 후 창이 자동으로 닫힙니다...</p>
+              <p>잠시 후 페이지가 이동됩니다...</p>
             </div>
             <script>
-              // 3초 후 팝업 자동 닫기
+              // 3초 후 부모 페이지로 이동
               setTimeout(() => {
-                window.close();
+                if (window.opener) {
+                  // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
+                  window.opener.location.href = '/?payment=success&step=3';
+                  window.close();
+                } else {
+                  // 팝업 아닌 경우: 직접 이동
+                  window.location.href = '/?payment=success&step=3';
+                }
               }, 3000);
             </script>
           </body>
