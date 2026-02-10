@@ -108,31 +108,55 @@ export default function AdminApplicationsList() {
         <div>
           <h2 className={styles.title}>자격증 신청 내역</h2>
           <div style={{ color: '#8b95a1', fontSize: '14px' }}>
-            총 <strong>{applications.length}</strong>건
+            총 <strong>{totalCount}</strong>건
           </div>
         </div>
-        <button
-          onClick={handleLogout}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#ffffff',
-            backgroundColor: '#ef4444',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = '#dc2626';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = '#ef4444';
-          }}
-        >
-          로그아웃
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={() => router.push('/admin/applications/new')}
+            style={{
+              padding: '10px 16px',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: '#ffffff',
+              backgroundColor: '#10b981',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#059669';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#10b981';
+            }}
+          >
+            + 새 신청
+          </button>
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: '10px 16px',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: '#ffffff',
+              backgroundColor: '#ef4444',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#dc2626';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#ef4444';
+            }}
+          >
+            로그아웃
+          </button>
+        </div>
       </div>
 
       <div className={styles.card}>
@@ -154,7 +178,7 @@ export default function AdminApplicationsList() {
             </thead>
             <tbody>
               {applications.map((app) => (
-                <tr key={app.id}>
+                <tr key={app.id} onClick={() => router.push(`/admin/applications/${app.id}`)} style={{ cursor: 'pointer' }}>
                   <td>
                     <div style={{ fontWeight: 600, color: '#191f28' }}>{app.name}</div>
                   </td>
