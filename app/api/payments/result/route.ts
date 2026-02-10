@@ -49,7 +49,16 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // 팝업을 자동으로 닫기 (3초 후)
+      // 모바일 기기 감지
+      const userAgent = request.headers.get('user-agent') || '';
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+      if (isMobile) {
+        // 모바일: 메인 페이지로 리다이렉트 (팝업이 없으므로)
+        return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
+      }
+
+      // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
       const html = `
         <html>
           <head>
@@ -109,7 +118,16 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // 팝업을 자동으로 닫기 (3초 후)
+      // 모바일 기기 감지
+      const userAgent = request.headers.get('user-agent') || '';
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+      if (isMobile) {
+        // 모바일: 메인 페이지로 리다이렉트 (팝업이 없으므로)
+        return NextResponse.redirect(new URL(`/?payment=failed&message=${encodeURIComponent(message || '결제에 실패했습니다')}`, request.url));
+      }
+
+      // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
       const failHtml = `
         <html>
           <head>
@@ -192,7 +210,16 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // 팝업을 자동으로 닫기 (3초 후)
+      // 모바일 기기 감지
+      const userAgent = request.headers.get('user-agent') || '';
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+      if (isMobile) {
+        // 모바일: 메인 페이지로 리다이렉트 (팝업이 없으므로)
+        return NextResponse.redirect(new URL('/?payment=success&step=3', request.url));
+      }
+
+      // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
       const html = `
         <html>
           <head>
@@ -252,7 +279,16 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // 팝업을 자동으로 닫기 (3초 후)
+      // 모바일 기기 감지
+      const userAgent = request.headers.get('user-agent') || '';
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+      if (isMobile) {
+        // 모바일: 메인 페이지로 리다이렉트 (팝업이 없으므로)
+        return NextResponse.redirect(new URL(`/?payment=failed&message=${encodeURIComponent(message || '결제에 실패했습니다')}`, request.url));
+      }
+
+      // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
       const failHtml = `
         <html>
           <head>
@@ -285,9 +321,6 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Payment result POST error:', error);
-    return NextResponse.json(
-      { success: false, error: '결제 결과 처리 중 오류가 발생했습니다.' },
-      { status: 500 }
-    );
+    return NextResponse.redirect(new URL('/?payment=error', request.url));
   }
 }
