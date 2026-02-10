@@ -53,44 +53,77 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // 모바일: 데이터베이스 업데이트 후 결제 성공 페이지로 리다이렉트
-      if (isMobile) {
-        return NextResponse.redirect(new URL('/payment-success', request.url));
+      // 성공 페이지 HTML (모바일, 데스크톱 모두)
+      const html = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 완료</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-
-      // 데스크톱: 결제 완료 후 부모 페이지로 이동
-      const html = `
-        <html>
-          <head>
-            <title>결제 완료</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f5f5f5; }
-              .container { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-              h1 { color: #333; margin: 0 0 10px 0; }
-              p { color: #666; margin: 0; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>✓ 결제가 완료되었습니다!</h1>
-              <p>잠시 후 페이지가 이동됩니다...</p>
-            </div>
-            <script>
-              // 3초 후 부모 페이지로 이동
-              setTimeout(() => {
-                if (window.opener) {
-                  // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
-                  window.opener.location.href = '/?payment=success&step=3';
-                  window.close();
-                } else {
-                  // 팝업 아닌 경우: 직접 이동
-                  window.location.href = '/?payment=success&step=3';
-                }
-              }, 3000);
-            </script>
-          </body>
-        </html>
-      `;
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f5f5f5;
+        padding: 20px;
+      }
+      .container {
+        text-align: center;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        max-width: 400px;
+        width: 100%;
+      }
+      h1 {
+        color: #333;
+        margin: 0 0 10px 0;
+        font-size: 22px;
+      }
+      p {
+        color: #666;
+        margin: 0;
+        font-size: 14px;
+      }
+      .checkmark {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <svg class="checkmark" viewBox="0 0 52 52">
+        <circle cx="26" cy="26" r="25" fill="none" stroke="#4CAF50" stroke-width="2"/>
+        <path fill="none" stroke="#4CAF50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M 16 26 L 24 34 L 36 18"/>
+      </svg>
+      <h1>✓ 결제가 완료되었습니다!</h1>
+      <p>잠시 후 페이지가 이동됩니다...</p>
+    </div>
+    <script>
+      setTimeout(function() {
+        if (window.opener) {
+          // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
+          window.opener.location.href = '/?payment=success&step=3';
+          window.close();
+        } else {
+          // 팝업 아닌 경우: 직접 이동
+          window.location.href = '/?payment=success&step=3';
+        }
+      }, 3000);
+    </script>
+  </body>
+</html>`;
       return new NextResponse(html, {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
@@ -125,37 +158,61 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // 모바일: 홈으로 리다이렉트 (결제 재시도 가능)
-      if (isMobile) {
-        return NextResponse.redirect(new URL('/?payment=failed', request.url));
+      // 실패 페이지 HTML
+      const failHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 실패</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-
-      // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
-      const failHtml = `
-        <html>
-          <head>
-            <title>결제 실패</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f5f5f5; }
-              .container { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-              h1 { color: #d32f2f; margin: 0 0 10px 0; }
-              p { color: #666; margin: 0; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>✗ 결제가 실패했습니다</h1>
-              <p>잠시 후 창이 자동으로 닫힙니다...</p>
-            </div>
-            <script>
-              // 3초 후 팝업 자동 닫기
-              setTimeout(() => {
-                window.close();
-              }, 3000);
-            </script>
-          </body>
-        </html>
-      `;
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f5f5f5;
+        padding: 20px;
+      }
+      .container {
+        text-align: center;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        max-width: 400px;
+        width: 100%;
+      }
+      h1 {
+        color: #d32f2f;
+        margin: 0 0 10px 0;
+        font-size: 22px;
+      }
+      p {
+        color: #666;
+        margin: 0;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>✗ 결제가 실패했습니다</h1>
+      <p>잠시 후 창이 자동으로 닫힙니다...</p>
+    </div>
+    <script>
+      setTimeout(function() {
+        window.close();
+      }, 3000);
+    </script>
+  </body>
+</html>`;
       return new NextResponse(failHtml, {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
@@ -181,7 +238,7 @@ export async function POST(request: NextRequest) {
     const message = params.get('message'); // 메시지
     const price = params.get('price'); // 결제 금액
 
-    // 모바일 기기 감지 (먼저 - 콜백 전에)
+    // 모바일 기기 감지
     const userAgent = request.headers.get('user-agent') || '';
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
@@ -217,44 +274,77 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // 모바일: 데이터베이스 업데이트 후 결제 성공 페이지로 리다이렉트
-      if (isMobile) {
-        return NextResponse.redirect(new URL('/payment-success', request.url));
+      // 성공 페이지 HTML
+      const html = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 완료</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-
-      // 데스크톱: 결제 완료 후 부모 페이지로 이동
-      const html = `
-        <html>
-          <head>
-            <title>결제 완료</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f5f5f5; }
-              .container { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-              h1 { color: #333; margin: 0 0 10px 0; }
-              p { color: #666; margin: 0; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>✓ 결제가 완료되었습니다!</h1>
-              <p>잠시 후 페이지가 이동됩니다...</p>
-            </div>
-            <script>
-              // 3초 후 부모 페이지로 이동
-              setTimeout(() => {
-                if (window.opener) {
-                  // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
-                  window.opener.location.href = '/?payment=success&step=3';
-                  window.close();
-                } else {
-                  // 팝업 아닌 경우: 직접 이동
-                  window.location.href = '/?payment=success&step=3';
-                }
-              }, 3000);
-            </script>
-          </body>
-        </html>
-      `;
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f5f5f5;
+        padding: 20px;
+      }
+      .container {
+        text-align: center;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        max-width: 400px;
+        width: 100%;
+      }
+      h1 {
+        color: #333;
+        margin: 0 0 10px 0;
+        font-size: 22px;
+      }
+      p {
+        color: #666;
+        margin: 0;
+        font-size: 14px;
+      }
+      .checkmark {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <svg class="checkmark" viewBox="0 0 52 52">
+        <circle cx="26" cy="26" r="25" fill="none" stroke="#4CAF50" stroke-width="2"/>
+        <path fill="none" stroke="#4CAF50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M 16 26 L 24 34 L 36 18"/>
+      </svg>
+      <h1>✓ 결제가 완료되었습니다!</h1>
+      <p>잠시 후 페이지가 이동됩니다...</p>
+    </div>
+    <script>
+      setTimeout(function() {
+        if (window.opener) {
+          // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
+          window.opener.location.href = '/?payment=success&step=3';
+          window.close();
+        } else {
+          // 팝업 아닌 경우: 직접 이동
+          window.location.href = '/?payment=success&step=3';
+        }
+      }, 3000);
+    </script>
+  </body>
+</html>`;
       return new NextResponse(html, {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
@@ -289,37 +379,61 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // 모바일: 홈으로 리다이렉트 (결제 재시도 가능)
-      if (isMobile) {
-        return NextResponse.redirect(new URL('/?payment=failed', request.url));
+      // 실패 페이지 HTML
+      const failHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 실패</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-
-      // 데스크톱: 팝업을 자동으로 닫기 (3초 후)
-      const failHtml = `
-        <html>
-          <head>
-            <title>결제 실패</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f5f5f5; }
-              .container { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-              h1 { color: #d32f2f; margin: 0 0 10px 0; }
-              p { color: #666; margin: 0; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>✗ 결제가 실패했습니다</h1>
-              <p>잠시 후 창이 자동으로 닫힙니다...</p>
-            </div>
-            <script>
-              // 3초 후 팝업 자동 닫기
-              setTimeout(() => {
-                window.close();
-              }, 3000);
-            </script>
-          </body>
-        </html>
-      `;
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f5f5f5;
+        padding: 20px;
+      }
+      .container {
+        text-align: center;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        max-width: 400px;
+        width: 100%;
+      }
+      h1 {
+        color: #d32f2f;
+        margin: 0 0 10px 0;
+        font-size: 22px;
+      }
+      p {
+        color: #666;
+        margin: 0;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>✗ 결제가 실패했습니다</h1>
+      <p>잠시 후 창이 자동으로 닫힙니다...</p>
+    </div>
+    <script>
+      setTimeout(function() {
+        window.close();
+      }, 3000);
+    </script>
+  </body>
+</html>`;
       return new NextResponse(failHtml, {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
