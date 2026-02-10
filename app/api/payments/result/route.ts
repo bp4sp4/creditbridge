@@ -72,45 +72,91 @@ export async function GET(request: NextRequest) {
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        background: #f5f5f5;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 20px;
       }
       .container {
         text-align: center;
         background: white;
-        padding: 40px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 60px 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         max-width: 400px;
         width: 100%;
+        animation: slideUp 0.5s ease-out;
       }
-      h1 {
-        color: #333;
-        margin: 0 0 10px 0;
-        font-size: 22px;
-      }
-      p {
-        color: #666;
-        margin: 0;
-        font-size: 14px;
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
       .checkmark {
-        width: 60px;
-        height: 60px;
-        margin: 0 auto 20px;
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 30px;
+        animation: scaleIn 0.6s ease-out 0.2s both;
+      }
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      h1 {
+        color: #191f28;
+        margin: 0 0 15px 0;
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      p {
+        color: #888;
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.5;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <svg class="checkmark" viewBox="0 0 52 52">
-        <circle cx="26" cy="26" r="25" fill="none" stroke="#4CAF50" stroke-width="2"/>
-        <path fill="none" stroke="#4CAF50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M 16 26 L 24 34 L 36 18"/>
+      <svg class="checkmark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#667eea" stroke-width="2"/>
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#667eea" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="283" style="animation: dash 0.6s ease-in-out 0.3s forwards;"/>
+        <path d="M 35 50 L 47 62 L 70 38" stroke="#667eea" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" style="animation: checkmark 0.6s ease-out 0.5s both;"/>
       </svg>
-      <h1>✓ 결제가 완료되었습니다!</h1>
+      <h1>결제가 완료되었습니다!</h1>
       <p>잠시 후 페이지가 이동됩니다...</p>
     </div>
     <script>
+      var style = document.createElement('style');
+      style.innerHTML = \`
+        @keyframes dash {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        @keyframes checkmark {
+          from {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+          }
+          to {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 0;
+          }
+        }
+      \`;
+      document.head.appendChild(style);
+
       setTimeout(function() {
         if (window.opener) {
           // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
@@ -293,45 +339,91 @@ export async function POST(request: NextRequest) {
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        background: #f5f5f5;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 20px;
       }
       .container {
         text-align: center;
         background: white;
-        padding: 40px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 60px 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         max-width: 400px;
         width: 100%;
+        animation: slideUp 0.5s ease-out;
       }
-      h1 {
-        color: #333;
-        margin: 0 0 10px 0;
-        font-size: 22px;
-      }
-      p {
-        color: #666;
-        margin: 0;
-        font-size: 14px;
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
       .checkmark {
-        width: 60px;
-        height: 60px;
-        margin: 0 auto 20px;
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 30px;
+        animation: scaleIn 0.6s ease-out 0.2s both;
+      }
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      h1 {
+        color: #191f28;
+        margin: 0 0 15px 0;
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      p {
+        color: #888;
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.5;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <svg class="checkmark" viewBox="0 0 52 52">
-        <circle cx="26" cy="26" r="25" fill="none" stroke="#4CAF50" stroke-width="2"/>
-        <path fill="none" stroke="#4CAF50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M 16 26 L 24 34 L 36 18"/>
+      <svg class="checkmark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#667eea" stroke-width="2"/>
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#667eea" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="283" style="animation: dash 0.6s ease-in-out 0.3s forwards;"/>
+        <path d="M 35 50 L 47 62 L 70 38" stroke="#667eea" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" style="animation: checkmark 0.6s ease-out 0.5s both;"/>
       </svg>
-      <h1>✓ 결제가 완료되었습니다!</h1>
+      <h1>결제가 완료되었습니다!</h1>
       <p>잠시 후 페이지가 이동됩니다...</p>
     </div>
     <script>
+      var style = document.createElement('style');
+      style.innerHTML = \`
+        @keyframes dash {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        @keyframes checkmark {
+          from {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+          }
+          to {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 0;
+          }
+        }
+      \`;
+      document.head.appendChild(style);
+
       setTimeout(function() {
         if (window.opener) {
           // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
