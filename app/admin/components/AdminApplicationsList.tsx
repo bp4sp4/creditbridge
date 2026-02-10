@@ -15,6 +15,13 @@ type Application = {
   photo_url: string;
   created_at: string;
   click_source?: string; // 추가된 유입경로
+  order_id?: string;
+  amount?: number;
+  payment_status?: string;
+  paid_at?: string;
+  trade_id?: string;
+  mul_no?: string;
+  pay_method?: string;
 };
 
 export default function AdminApplicationsList() {
@@ -58,7 +65,9 @@ export default function AdminApplicationsList() {
                 <th>연락처 / 생년월일</th>
                 <th>신청 자격증</th>
                 <th>주소</th>
-                
+                <th>결제 상태</th>
+                <th>결제 금액</th>
+                <th>결제일</th>
                 <th>사진</th>
                 <th>신청일</th>
               </tr>
@@ -85,12 +94,35 @@ export default function AdminApplicationsList() {
                       {app.address}
                     </div>
                   </td>
-          
+                  <td>
+                    <div style={{
+                      display: 'inline-block',
+                      padding: '4px 12px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      backgroundColor: app.payment_status === 'paid' ? '#d1fae5' : app.payment_status === 'failed' ? '#fee2e2' : '#fef3c7',
+                      color: app.payment_status === 'paid' ? '#065f46' : app.payment_status === 'failed' ? '#991b1b' : '#92400e'
+                    }}>
+                      {app.payment_status === 'paid' ? '결제완료' : app.payment_status === 'failed' ? '결제실패' : '대기중'}
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: 500 }}>
+                      {app.amount ? `${app.amount.toLocaleString()}원` : '-'}
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ fontSize: '13px' }}>
+                      {app.paid_at ? new Date(app.paid_at).toLocaleDateString('ko-KR') : '-'}
+                    </div>
+                  </td>
+
                   <td>
                     {app.photo_url ? (
-                      <a 
-                        href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/photos/${app.photo_url}`} 
-                        target="_blank" 
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/photos/${app.photo_url}`}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className={styles.photoLink}
                       >
