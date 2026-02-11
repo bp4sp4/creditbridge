@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     baseUrl = baseUrl.replace(/\/$/, '');
 
     // PayApp REST API 요청
+    // 면세 처리: 전체 금액을 amount_taxfree에 설정
     const paymentParams = new URLSearchParams({
       cmd: 'payrequest',
       userid: payappUserId,
@@ -38,6 +39,10 @@ export async function POST(request: NextRequest) {
       var1: var1,
       skip_cstpage: 'y', // 매출전표 페이지 스킵
       smsuse: 'n', // SMS 발송 안함
+      // 면세 설정
+      amount_taxable: '0',           // 과세 금액: 0
+      amount_taxfree: price.toString(), // 면세 금액: 전체 가격
+      amount_vat: '0',              // 부가세: 0
     });
 
     const paymentResponse = await fetch('https://api.payapp.kr/oapi/apiLoad.html', {
