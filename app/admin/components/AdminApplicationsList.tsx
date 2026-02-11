@@ -28,6 +28,7 @@ type Application = {
   address_main?: string;
   address_detail?: string;
   postal_code?: string;
+  is_checked?: boolean;
 };
 
 export default function AdminApplicationsList() {
@@ -39,6 +40,7 @@ export default function AdminApplicationsList() {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const itemsPerPage = 10;
 
   // 로그아웃 함수
@@ -80,22 +82,41 @@ export default function AdminApplicationsList() {
     const supabase = createClient();
     async function fetchApplications() {
       setLoading(true);
-      const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
 
       const { count } = await supabase
         .from('certificate_applications')
         .select('*', { count: 'exact', head: true });
 
-      const { data, error } = await supabase
+      // 체크된 항목과 체크되지 않은 항목 따로 조회
+      const { data: checkedData } = await supabase
         .from('certificate_applications')
         .select('*')
-        .order('created_at', { ascending: false })
-        .range(from, to);
+        .eq('is_checked', true)
+        .order('created_at', { ascending: false });
+
+      const { data: uncheckedData, error } = await supabase
+        .from('certificate_applications')
+        .select('*')
+        .eq('is_checked', false)
+        .order('created_at', { ascending: false });
 
       if (!error) {
-        setApplications(data || []);
+        // 체크되지 않은 항목 먼저, 그 다음 체크된 항목
+        const sortedData = [...(uncheckedData || []), ...(checkedData || [])];
+
+        // 페이징 적용
+        const from = (currentPage - 1) * itemsPerPage;
+        const to = from + itemsPerPage;
+        const paginatedData = sortedData.slice(from, to);
+
+        setApplications(paginatedData);
         setTotalCount(count || 0);
+
+        // 체크된 ID 설정
+        const checkedIds = new Set(
+          (checkedData || []).map(app => app.id)
+        );
+        setCheckedIds(checkedIds);
       }
       setLoading(false);
     }
@@ -123,6 +144,11 @@ export default function AdminApplicationsList() {
   const handleDeleteApplication = (id: string) => {
     setApplications(prev => prev.filter(app => app.id !== id));
     setTotalCount(prev => prev - 1);
+    setCheckedIds(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
   };
 
   // 즉시 수정 (optimistic update)
@@ -138,6 +164,66 @@ export default function AdminApplicationsList() {
   const handleAddApplication = (newApp: Application) => {
     setApplications(prev => [newApp, ...prev]);
     setTotalCount(prev => prev + 1);
+  };
+
+  // 체크박스 핸들러
+  const handleCheckChange = async (id: string) => {
+    const supabase = createClient();
+    const isCurrentlyChecked = checkedIds.has(id);
+    const newCheckedState = !isCurrentlyChecked;
+
+    // 즉시 UI 업데이트
+    setCheckedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+
+    // 체크 상태에 따라 행 정렬
+    setApplications(prev => {
+      const newList = [...prev];
+      const checkedIndex = newList.findIndex(app => app.id === id);
+      if (checkedIndex === -1) return prev;
+
+      const checkedApp = newList[checkedIndex];
+      newList.splice(checkedIndex, 1);
+
+      if (newCheckedState) {
+        // 체크 시: 맨 아래로
+        newList.push(checkedApp);
+      } else {
+        // 체크 해제 시: 원래 위치로 (정렬 순서대로)
+        newList.unshift(checkedApp);
+        return newList.sort((a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      }
+      return newList;
+    });
+
+    // DB에 저장
+    const { error } = await supabase
+      .from('certificate_applications')
+      .update({ is_checked: newCheckedState })
+      .eq('id', id);
+
+    if (error) {
+      console.error('DB 저장 실패:', error);
+      // 오류 발생 시 즉시 되돌리기
+      setCheckedIds(prev => {
+        const newSet = new Set(prev);
+        if (newCheckedState) {
+          newSet.delete(id);
+        } else {
+          newSet.add(id);
+        }
+        return newSet;
+      });
+    }
   };
 
   if (loading) return <div className={styles.loading}>데이터를 불러오고 있습니다...</div>;
@@ -204,6 +290,7 @@ export default function AdminApplicationsList() {
           <table className={styles.table}>
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>선택</th>
                 <th>신청자</th>
                 <th>연락처 / 생년월일</th>
                 <th>신청 자격증</th>
@@ -218,7 +305,23 @@ export default function AdminApplicationsList() {
             </thead>
             <tbody>
               {applications.map((app) => (
-                <tr key={app.id} onClick={() => openModal(app)} style={{ cursor: 'pointer' }}>
+                <tr
+                  key={app.id}
+                  onClick={() => openModal(app)}
+                  style={{
+                    cursor: 'pointer',
+                    backgroundColor: checkedIds.has(app.id) ? '#fff3cd' : 'transparent',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={checkedIds.has(app.id)}
+                      onChange={() => handleCheckChange(app.id)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </td>
                   <td>
                     <div style={{ fontWeight: 600, color: '#191f28' }}>{app.name}</div>
                   </td>

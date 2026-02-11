@@ -105,30 +105,36 @@
     font-size: 13px;
   }
 
-  /* 모바일에서는 번호판(결제번호)만 표시 */
-  .table th:not(:nth-child(1)):not(:nth-child(8)),
-  .table td:not(:nth-child(1)):not(:nth-child(8)) {
+  /* 모바일에서는 선택, 신청자, 결제번호만 표시 */
+  .table th:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(9)),
+  .table td:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(9)) {
     display: none;
   }
 
-  /* 신청자와 결제번호 열만 보이기 */
+  /* 선택, 신청자, 결제번호 열만 보이기 */
   .table th:nth-child(1),
   .table td:nth-child(1) {
+    padding: 12px 6px;
+    min-width: auto;
+  }
+
+  .table th:nth-child(2),
+  .table td:nth-child(2) {
     padding: 12px 8px;
     min-width: 60px;
   }
 
-  .table th:nth-child(8),
-  .table td:nth-child(8) {
+  .table th:nth-child(9),
+  .table td:nth-child(9) {
     padding: 12px 8px;
     min-width: 150px;
   }
 
-  .table td:nth-child(1) {
+  .table td:nth-child(2) {
     font-weight: 600;
   }
 
-  .table td:nth-child(8) {
+  .table td:nth-child(9) {
     font-family: monospace;
     font-size: 12px;
     color: #6b7280;
