@@ -201,7 +201,7 @@ export default function AdminApplicationsList() {
   const highlightText = (text: string, query: string, isContact: boolean = false) => {
     if (!query.trim()) return text;
 
-    let regex;
+    let regex: RegExp;
     if (isContact) {
       // 연락처인 경우 하이픈을 무시하고 검색
       const queryNoHyphen = query.replace(/-/g, "");
@@ -209,7 +209,7 @@ export default function AdminApplicationsList() {
       const textNoHyphen = text.replace(/-/g, "");
 
       // 원본 텍스트에서 해당 부분을 찾기
-      const parts: (string | JSX.Element)[] = [];
+      const parts: (string | React.ReactElement)[] = [];
       let lastIndex = 0;
       let match;
 
