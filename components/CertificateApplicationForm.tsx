@@ -50,6 +50,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
   const [isInitializing, setIsInitializing] = useState(true);
   const [photoUploadChoice, setPhotoUploadChoice] = useState<'yes' | 'no'>('no');
+  const [showPhotoPreview, setShowPhotoPreview] = useState(false);
 
   // 전체 선택 함수
   const handleSelectAll = () => {
@@ -625,8 +626,25 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         <img
                           src={URL.createObjectURL(formData.photo)}
                           alt="미리보기"
-                          style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 12, border: '1.5px solid #e5e8eb', boxShadow: '0 2px 8px 0 rgba(0,0,0,0.04)' }}
+                          onClick={() => setShowPhotoPreview(true)}
+                          style={{
+                            width: 120,
+                            height: 120,
+                            objectFit: 'cover',
+                            borderRadius: 12,
+                            border: '1.5px solid #e5e8eb',
+                            boxShadow: '0 2px 8px 0 rgba(0,0,0,0.04)',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s',
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.05)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
                         />
+                        <p style={{ fontSize: 12, color: '#999', marginTop: 8 }}>클릭하여 크게 보기</p>
                       </div>
                     )}
                   </>
@@ -777,6 +795,69 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 선택하기
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 사진 미리보기 모달 */}
+      {showPhotoPreview && formData.photo && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+          }}
+          onClick={() => setShowPhotoPreview(false)}
+        >
+          <div
+            style={{
+              position: 'relative',
+              maxWidth: '90%',
+              maxHeight: '90%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={URL.createObjectURL(formData.photo)}
+              alt="증명 사진 미리보기"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                borderRadius: '8px',
+              }}
+            />
+            <button
+              onClick={() => setShowPhotoPreview(false)}
+              style={{
+                position: 'absolute',
+                top: '-40px',
+                right: 0,
+                background: 'none',
+                border: 'none',
+                fontSize: '32px',
+                cursor: 'pointer',
+                color: '#ffffff',
+                padding: 0,
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              ×
+            </button>
           </div>
         </div>
       )}

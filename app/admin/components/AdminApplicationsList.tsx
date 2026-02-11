@@ -183,27 +183,8 @@ export default function AdminApplicationsList() {
       return newSet;
     });
 
-    // 체크 상태에 따라 행 정렬
-    setApplications(prev => {
-      const newList = [...prev];
-      const checkedIndex = newList.findIndex(app => app.id === id);
-      if (checkedIndex === -1) return prev;
-
-      const checkedApp = newList[checkedIndex];
-      newList.splice(checkedIndex, 1);
-
-      if (newCheckedState) {
-        // 체크 시: 맨 아래로
-        newList.push(checkedApp);
-      } else {
-        // 체크 해제 시: 원래 위치로 (정렬 순서대로)
-        newList.unshift(checkedApp);
-        return newList.sort((a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      }
-      return newList;
-    });
+    // UI만 업데이트하고 이동하지 않음
+    // 체크 상태만 변경
 
     // DB에 저장
     const { error } = await supabase
@@ -310,7 +291,7 @@ export default function AdminApplicationsList() {
                   onClick={() => openModal(app)}
                   style={{
                     cursor: 'pointer',
-                    backgroundColor: checkedIds.has(app.id) ? '#fff3cd' : 'transparent',
+                    backgroundColor: checkedIds.has(app.id) ? '#d1fae5' : 'transparent',
                     transition: 'background-color 0.2s'
                   }}
                 >

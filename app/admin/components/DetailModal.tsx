@@ -68,6 +68,7 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [showPhotoPreview, setShowPhotoPreview] = useState(false);
 
   const allCertificates = Array.from(
     new Set(CERTIFICATE_CATEGORIES.flatMap((cat) => cat.options))
@@ -175,6 +176,43 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
       }
     } catch (err) {
       alert('삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  // JPG로 다운로드
+  const downloadAsJPG = async () => {
+    const imageUrl = `https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('https://')[1]}/storage/v1/object/public/photos/${formData.photo_url}`;
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+
+      // Canvas를 사용해 JPG로 변환
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(blob);
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((jpgBlob) => {
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(jpgBlob!);
+            link.href = url;
+            link.download = `${formData.name}_증명사진.jpg`;
+            link.click();
+            URL.revokeObjectURL(url);
+          }, 'image/jpeg', 0.95);
+        }
+        URL.revokeObjectURL(objectUrl);
+      };
+
+      img.src = objectUrl;
+    } catch (error) {
+      console.error('다운로드 실패:', error);
+      alert('다운로드에 실패했습니다.');
     }
   };
 
@@ -372,20 +410,27 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
                     <img
                       src={`https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('https://')[1]}/storage/v1/object/public/photos/${formData.photo_url}`}
                       alt="증명 사진"
+                      onClick={() => setShowPhotoPreview(true)}
                       style={{
                         maxWidth: '100%',
                         height: 'auto',
                         borderRadius: '8px',
                         border: '1px solid #e5e8eb',
                         maxHeight: '300px',
-                        objectFit: 'cover'
+                        objectFit: 'cover',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s',
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.02)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
                       }}
                     />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <a
-                        href={`https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('https://')[1]}/storage/v1/object/public/photos/${formData.photo_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => setShowPhotoPreview(true)}
                         style={{
                           padding: '10px 16px',
                           backgroundColor: '#3182f6',
@@ -396,7 +441,8 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
                           fontWeight: 600,
                           cursor: 'pointer',
                           textAlign: 'center',
-                          transition: 'all 0.2s'
+                          transition: 'all 0.2s',
+                          border: 'none'
                         }}
                         onMouseOver={(e) => {
                           e.currentTarget.style.backgroundColor = '#1e63d7';
@@ -405,22 +451,21 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
                           e.currentTarget.style.backgroundColor = '#3182f6';
                         }}
                       >
-                        보기
-                      </a>
-                      <a
-                        href={`https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('https://')[1]}/storage/v1/object/public/photos/${formData.photo_url}?download=true`}
-                        download={formData.photo_url}
+                        크게 보기
+                      </button>
+                      <button
+                        onClick={downloadAsJPG}
                         style={{
                           padding: '10px 16px',
                           backgroundColor: '#10b981',
                           color: '#ffffff',
-                          textDecoration: 'none',
                           borderRadius: '6px',
                           fontSize: '14px',
                           fontWeight: 600,
                           cursor: 'pointer',
                           textAlign: 'center',
-                          transition: 'all 0.2s'
+                          transition: 'all 0.2s',
+                          border: 'none'
                         }}
                         onMouseOver={(e) => {
                           e.currentTarget.style.backgroundColor = '#059669';
@@ -429,8 +474,8 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
                           e.currentTarget.style.backgroundColor = '#10b981';
                         }}
                       >
-                        다운로드
-                      </a>
+                        JPG 다운로드
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -845,6 +890,69 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
           )}
         </div>
       </div>
+
+      {/* 사진 미리보기 모달 */}
+      {showPhotoPreview && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+          }}
+          onClick={() => setShowPhotoPreview(false)}
+        >
+          <div
+            style={{
+              position: 'relative',
+              maxWidth: '90%',
+              maxHeight: '90%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={`https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('https://')[1]}/storage/v1/object/public/photos/${formData.photo_url}`}
+              alt="증명 사진 미리보기"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                borderRadius: '8px',
+              }}
+            />
+            <button
+              onClick={() => setShowPhotoPreview(false)}
+              style={{
+                position: 'absolute',
+                top: '-40px',
+                right: 0,
+                background: 'none',
+                border: 'none',
+                fontSize: '32px',
+                cursor: 'pointer',
+                color: '#ffffff',
+                padding: 0,
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

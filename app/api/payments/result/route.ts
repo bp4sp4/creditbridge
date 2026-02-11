@@ -1,6 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/client';
 
+// 슬랙 알림 함수
+async function sendSlackNotification(data: {
+  name: string;
+  amount: number;
+  mul_no: string;
+  payment_status: 'paid' | 'failed';
+}) {
+  const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
+
+  if (!slackWebhookUrl) {
+    console.log('Slack webhook URL이 설정되지 않았습니다');
+    return;
+  }
+
+  try {
+    const message = {
+      text: `결제 ${data.payment_status === 'paid' ? '완료' : '실패'} 알림`,
+      attachments: [
+        {
+          color: data.payment_status === 'paid' ? '#28A745' : '#EE5A6F',
+          fields: [
+            {
+              title: '신청자',
+              value: data.name,
+              short: true,
+            },
+            {
+              title: '결제 금액',
+              value: `${data.amount.toLocaleString()}원`,
+              short: true,
+            },
+            {
+              title: '결제번호',
+              value: data.mul_no || '-',
+              short: true,
+            },
+            {
+              title: '상태',
+              value: data.payment_status === 'paid' ? '✅ 결제 완료' : '❌ 결제 실패',
+              short: true,
+            },
+            {
+              title: '시간',
+              value: new Date().toLocaleString('ko-KR'),
+              short: false,
+            },
+          ],
+        },
+      ],
+    };
+
+    await fetch(slackWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(message),
+    });
+  } catch (error) {
+    console.error('Slack 알림 전송 실패:', error);
+  }
+}
+
 /**
  * PayApp 결제 결과 콜백
  * 사용자가 결제 후 돌아오는 returnurl
@@ -39,17 +102,27 @@ export async function GET(request: NextRequest) {
       if (updateError) {
         console.error('Database update error:', updateError);
       } else if (appData) {
+        const amount = parseInt(searchParams.get('price') || '0');
+
         // 결제 로그 기록
         await supabase.from('payment_logs').insert({
           app_id: appData.id,
           action: 'payment_success',
-          amount: parseInt(searchParams.get('price') || '0'),
+          amount: amount,
           response_data: {
             state,
             tradeid,
             mul_no,
             message
           }
+        });
+
+        // 슬랙 알림 전송
+        await sendSlackNotification({
+          name: appData.name,
+          amount: amount,
+          mul_no: mul_no || '',
+          payment_status: 'paid',
         });
       }
 
@@ -200,6 +273,14 @@ export async function GET(request: NextRequest) {
             message
           }
         });
+
+        // 슬랙 알림 전송
+        await sendSlackNotification({
+          name: appData.name,
+          amount: 0,
+          mul_no: mul_no || '',
+          payment_status: 'failed',
+        });
       }
 
       // 실패 페이지 HTML
@@ -309,12 +390,22 @@ export async function POST(request: NextRequest) {
       }
 
       if (appData) {
+        const amount = parseInt(price || '0');
+
         // 결제 성공 로그
         await supabase.from('payment_logs').insert({
           app_id: appData.id,
           action: 'payment_success',
-          amount: parseInt(price || '0'),
+          amount: amount,
           response_data: Object.fromEntries(params)
+        });
+
+        // 슬랙 알림 전송
+        await sendSlackNotification({
+          name: appData.name,
+          amount: amount,
+          mul_no: mul_no || '',
+          payment_status: 'paid',
         });
       }
 
@@ -464,6 +555,14 @@ export async function POST(request: NextRequest) {
           action: 'payment_failed',
           error_message: message,
           response_data: Object.fromEntries(params)
+        });
+
+        // 슬랙 알림 전송
+        await sendSlackNotification({
+          name: appData.name,
+          amount: 0,
+          mul_no: mul_no || '',
+          payment_status: 'failed',
         });
       }
 
