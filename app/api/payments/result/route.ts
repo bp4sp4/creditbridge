@@ -236,16 +236,17 @@ export async function GET(request: NextRequest) {
       \`;
       document.head.appendChild(style);
 
+      // 즉시 리다이렉트 (애니메이션은 0.5초만)
       setTimeout(function() {
         if (window.opener) {
           // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
           window.opener.location.href = '/?payment=success&step=3';
           window.close();
         } else {
-          // 팝업 아닌 경우 (모바일): 직접 이동
+          // 팝업 아닌 경우 (모바일): 즉시 이동
           window.location.href = '/?payment=success&step=3';
         }
-      }, 1500);
+      }, 500);
     </script>
   </body>
 </html>`;
@@ -584,16 +585,17 @@ export async function POST(request: NextRequest) {
       \`;
       document.head.appendChild(style);
 
+      // 즉시 리다이렉트 (애니메이션은 0.5초만)
       setTimeout(function() {
         if (window.opener) {
           // 팝업 창인 경우: 부모 페이지로 이동 후 닫기
           window.opener.location.href = '/?payment=success&step=3';
           window.close();
         } else {
-          // 팝업 아닌 경우 (모바일): 직접 이동
+          // 팝업 아닌 경우 (모바일): 즉시 이동
           window.location.href = '/?payment=success&step=3';
         }
-      }, 1500);
+      }, 500);
     </script>
   </body>
 </html>`;
