@@ -1211,7 +1211,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 <p className={styles.modalPrivacyItem}>
                   <strong>2. 수집 및 이용하는 개인정보 항목</strong>
                   <br />
-                  필수 - 이름, 연락처(휴대전화번호), 최종학력, 취득사유
+                  필수 - 이름, 연락처(휴대전화번호), 생년월일, 주소, 자격증종류
+                  선택 - 증명사진, 상세주소
                 </p>
                 <p className={styles.modalPrivacyItem}>
                   <strong>3. 보유 및 이용 기간</strong>
