@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/server';
 
 // 슬랙 알림 함수
 async function sendSlackNotification(data: {
@@ -71,7 +71,7 @@ async function sendSlackNotification(data: {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // PayApp에서 넘어오는 결제 결과 파라미터
     const state = searchParams.get('state'); // 결제 결과 상태 (1:성공, 0:실패)
@@ -354,7 +354,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
     const params = new URLSearchParams(body);
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const state = params.get('state'); // 1: 성공, 0: 실패
     const tradeid = params.get('tradeid'); // 거래번호
