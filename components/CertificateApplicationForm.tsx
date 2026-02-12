@@ -387,11 +387,13 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         stepParam,
         paymentParam,
         search: window.location.search,
+        fullUrl: window.location.href
       });
 
       // step=3이 URL에 있으면 무조건 step 3으로 설정 (결제 완료)
-      if (stepParam === "3" && paymentParam === "success") {
-        console.log("Setting step to 3 - Payment completed");
+      // payment=success가 있거나 step=3만 있어도 결제 완료로 간주
+      if (stepParam === "3") {
+        console.log("Setting step to 3 - Payment completed (stepParam=3 detected)");
         sessionStorage.removeItem("paymentProcessing");
         sessionStorage.setItem("paymentProcessed", "true");
         // URL 파라미터 제거 (먼저 처리)
@@ -410,6 +412,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         setIsInitializing(false);
       } else {
         // 일반 페이지 로드
+        console.log("Normal page load - no payment params");
         setIsInitializing(false);
       }
     }
