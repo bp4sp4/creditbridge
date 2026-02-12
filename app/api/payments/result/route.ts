@@ -84,8 +84,8 @@ export async function GET(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || '';
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
-    // 결제 성공 여부 확인 (state가 '1'이거나 mul_no가 있으면 성공)
-    if (state === '1' || (state === null && mul_no)) {
+    // 결제 성공 여부 확인 (state가 명시적으로 '1'일 때만 성공)
+    if (state === '1') {
       // 데이터베이스 업데이트 - 결제 성공 (certificate_applications 테이블)
       const { error: updateError, data: appData } = await supabase
         .from('certificate_applications')
@@ -245,8 +245,8 @@ export async function GET(request: NextRequest) {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
       });
-    } else {
-      // 데이터베이스 업데이트 - 결제 실패
+    } else if (state === '0') {
+      // 데이터베이스 업데이트 - 결제 실패 (state가 명시적으로 '0'일 때만)
       const { error: updateError, data: appData } = await supabase
         .from('certificate_applications')
         .update({
@@ -342,6 +342,126 @@ export async function GET(request: NextRequest) {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
       });
+    } else {
+      // 무통장입금 등 대기 상태 - mul_no만 업데이트하고 pending 유지
+      const { error: updateError } = await supabase
+        .from('certificate_applications')
+        .update({
+          mul_no: mul_no,
+          trade_id: tradeid,
+        })
+        .eq('order_id', var1);
+
+      if (updateError) {
+        console.error('Database update error:', updateError);
+      }
+
+      // 무통장입금 안내 페이지
+      const pendingHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입금 대기</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        padding: 20px;
+      }
+      .container {
+        text-align: center;
+        background: white;
+        padding: 60px 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        max-width: 500px;
+        width: 100%;
+        animation: slideUp 0.5s ease-out;
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 30px;
+        background: #fff3e0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        animation: scaleIn 0.6s ease-out 0.2s both;
+      }
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      h1 {
+        color: #191f28;
+        margin: 0 0 15px 0;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      p {
+        color: #666;
+        margin: 0 0 10px 0;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+      .highlight {
+        color: #f5576c;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">⏱️</div>
+      <h1>무통장입금 신청 완료</h1>
+      <p>계좌번호로 입금해주시면<br/>입금 확인 후 자동으로 결제가 완료됩니다.</p>
+      <p class="highlight">입금 확인까지 최대 1영업일 소요됩니다.</p>
+    </div>
+    <script>
+      setTimeout(function() {
+        if (window.opener) {
+          window.opener.location.href = '/?payment=pending&step=3';
+          window.close();
+        } else {
+          window.location.href = '/?payment=pending&step=3';
+        }
+      }, 5000);
+    </script>
+  </body>
+</html>`;
+      return new NextResponse(pendingHtml, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      });
     }
   } catch (error) {
     console.error('Payment result error:', error);
@@ -367,8 +487,8 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || '';
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
-    // 데이터베이스에 결제 결과 저장 (state가 '1'이거나 mul_no가 있으면 성공)
-    if (state === '1' || (state === null && mul_no)) {
+    // 데이터베이스에 결제 결과 저장 (state가 명시적으로 '1'일 때만 성공)
+    if (state === '1') {
       const { error: updateError, data: appData } = await supabase
         .from('certificate_applications')
         .update({
@@ -528,7 +648,7 @@ export async function POST(request: NextRequest) {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
       });
-    } else {
+    } else if (state === '0') {
       const { error: updateError, data: appData } = await supabase
         .from('certificate_applications')
         .update({
@@ -622,6 +742,126 @@ export async function POST(request: NextRequest) {
   </body>
 </html>`;
       return new NextResponse(failHtml, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      });
+    } else {
+      // 무통장입금 등 대기 상태 - mul_no만 업데이트하고 pending 유지
+      const { error: updateError } = await supabase
+        .from('certificate_applications')
+        .update({
+          mul_no: mul_no,
+          trade_id: tradeid,
+        })
+        .eq('order_id', var1);
+
+      if (updateError) {
+        console.error('Database update error:', updateError);
+      }
+
+      // 무통장입금 안내 페이지
+      const pendingHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입금 대기</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        padding: 20px;
+      }
+      .container {
+        text-align: center;
+        background: white;
+        padding: 60px 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        max-width: 500px;
+        width: 100%;
+        animation: slideUp 0.5s ease-out;
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 30px;
+        background: #fff3e0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        animation: scaleIn 0.6s ease-out 0.2s both;
+      }
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      h1 {
+        color: #191f28;
+        margin: 0 0 15px 0;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      p {
+        color: #666;
+        margin: 0 0 10px 0;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+      .highlight {
+        color: #f5576c;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">⏱️</div>
+      <h1>무통장입금 신청 완료</h1>
+      <p>계좌번호로 입금해주시면<br/>입금 확인 후 자동으로 결제가 완료됩니다.</p>
+      <p class="highlight">입금 확인까지 최대 1영업일 소요됩니다.</p>
+    </div>
+    <script>
+      setTimeout(function() {
+        if (window.opener) {
+          window.opener.location.href = '/?payment=pending&step=3';
+          window.close();
+        } else {
+          window.location.href = '/?payment=pending&step=3';
+        }
+      }, 5000);
+    </script>
+  </body>
+</html>`;
+      return new NextResponse(pendingHtml, {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
       });

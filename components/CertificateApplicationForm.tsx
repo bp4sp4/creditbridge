@@ -120,6 +120,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
     "no",
   );
   const [showPhotoPreview, setShowPhotoPreview] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<"success" | "pending" | null>(null);
 
   // 전체 선택 함수
   const handleSelectAll = () => {
@@ -305,14 +306,10 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               // 팝업 차단된 경우 새 탭으로 열기
               window.location.href = responseData.data.payurl;
             } else {
-              // 팝업이 결제를 완료한 후 닫힐 때까지 체크 (최대 120초)
-              let checkCount = 0;
-              const maxChecks = 240; // 120초 (500ms * 240)
+              // 팝업이 닫힐 때까지 체크 (타임아웃 없음 - 사용자가 결제를 완료할 때까지 대기)
               let popupClosing = false;
 
               const checkPopupClosed = setInterval(() => {
-                checkCount++;
-
                 try {
                   // 팝업의 URL 확인 (팝업이 결제 완료 페이지로 이동했는지 확인)
                   if (paymentWindow && !paymentWindow.closed) {
@@ -327,6 +324,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         if (!popupClosing) {
                           popupClosing = true;
                           console.log("Payment completed, closing popup");
+                          clearInterval(checkPopupClosed);
                           sessionStorage.removeItem("paymentProcessing");
                           paymentWindow.close();
                           // 즉시 부모 페이지 이동 (로딩 스크린 표시됨)
@@ -336,43 +334,16 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         }
                       }
                     } catch (e) {
-                      // 크로스도메인 에러 - 시간 기반으로 체크
-                      if (checkCount >= 80) {
-                        // 약 40초 후
-                        if (!popupClosing) {
-                          popupClosing = true;
-                          console.log("Timeout reached, closing popup");
-                          sessionStorage.removeItem("paymentProcessing");
-                          paymentWindow.close();
-                          // 즉시 부모 페이지 이동 (로딩 스크린 표시됨)
-                          window.location.href =
-                            window.location.pathname +
-                            "?payment=success&step=3";
-                        }
-                      }
+                      // 크로스도메인 에러 - 팝업이 다른 도메인에 있음 (정상)
+                      // 아무것도 하지 않고 계속 체크
                     }
                   } else if (paymentWindow && paymentWindow.closed) {
-                    // 팝업이 이미 닫혔으면 부모 페이지 이동
+                    // 팝업이 닫혔으면 interval 정리하고 대기 상태로 복귀
                     clearInterval(checkPopupClosed);
-                    console.log("Popup already closed, navigating to step 3");
-                    if (!popupClosing) {
-                      popupClosing = true;
-                      sessionStorage.removeItem("paymentProcessing");
-                      window.location.href =
-                        window.location.pathname + "?payment=success&step=3";
-                    }
-                  }
-
-                  // 최대 시간 초과
-                  if (checkCount >= maxChecks) {
-                    clearInterval(checkPopupClosed);
-                    console.log("Max checks reached, navigating to step 3");
-                    if (!popupClosing) {
-                      popupClosing = true;
-                      sessionStorage.removeItem("paymentProcessing");
-                      window.location.href =
-                        window.location.pathname + "?payment=success&step=3";
-                    }
+                    console.log("Popup closed by user");
+                    sessionStorage.removeItem("paymentProcessing");
+                    // 사용자가 팝업을 닫은 경우 메인 페이지로 복귀 (결제 취소)
+                    window.location.href = window.location.pathname;
                   }
                 } catch (err) {
                   console.error("Error checking popup:", err);
@@ -425,11 +396,17 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
       const hasProcessedPayment =
         sessionStorage.getItem("paymentProcessed") === "true";
 
-      // 결제 중이 아니고, step=3이 감지되었으면 결제 완료로 간주
+      // 결제 중이 아니고, step=3이 감지되었으면 결제 완료 또는 pending으로 간주
       if (stepParam === "3" && !hasProcessedPayment) {
-        console.log("Setting step to 3 - Payment completed");
+        console.log("Setting step to 3 - Payment:", paymentParam);
         sessionStorage.removeItem("paymentProcessing");
         sessionStorage.setItem("paymentProcessed", "true");
+        // payment 상태 저장
+        if (paymentParam === "pending") {
+          setPaymentStatus("pending");
+        } else {
+          setPaymentStatus("success");
+        }
         // URL 파라미터 제거 (먼저 처리)
         window.history.replaceState({}, "", window.location.pathname);
         setStep(3);
@@ -958,14 +935,45 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             className={styles.stepWrapper}
             style={{ textAlign: "center", justifyContent: "center" }}
           >
-            <Image
-              src="/complete-check.png"
-              alt="완료"
-              width={240}
-              height={240}
-              style={{ margin: "0 auto 24px" }}
-            />
-            <h1 className={styles.title}>결제가 완료되었습니다!</h1>
+            {paymentStatus === "pending" ? (
+              <>
+                <div style={{
+                  fontSize: "80px",
+                  margin: "0 auto 24px",
+                  width: "240px",
+                  height: "240px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  ⏱️
+                </div>
+                <h1 className={styles.title}>무통장입금 신청이 완료되었습니다</h1>
+                <p style={{
+                  marginTop: "16px",
+                  color: "#666",
+                  fontSize: "16px",
+                  lineHeight: "1.6"
+                }}>
+                  계좌번호로 입금해주시면<br/>
+                  입금 확인 후 자동으로 결제가 완료됩니다.<br/>
+                  <span style={{ color: "#f5576c", fontWeight: "600" }}>
+                    입금 확인까지 최대 1영업일 소요됩니다.
+                  </span>
+                </p>
+              </>
+            ) : (
+              <>
+                <Image
+                  src="/complete-check.png"
+                  alt="완료"
+                  width={240}
+                  height={240}
+                  style={{ margin: "0 auto 24px" }}
+                />
+                <h1 className={styles.title}>결제가 완료되었습니다!</h1>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
