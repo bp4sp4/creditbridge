@@ -389,14 +389,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         search: window.location.search,
       });
 
-      // 결제 중 상태 확인 (중복 이동 방지)
-      const isPaymentProcessing =
-        sessionStorage.getItem("paymentProcessing") === "true";
-      const hasProcessedPayment =
-        sessionStorage.getItem("paymentProcessed") === "true";
-
-      // 결제 중이 아니고, step=3이 감지되었으면 결제 완료로 간주
-      if (stepParam === "3" && !hasProcessedPayment) {
+      // step=3이 URL에 있으면 무조건 step 3으로 설정 (결제 완료)
+      if (stepParam === "3" && paymentParam === "success") {
         console.log("Setting step to 3 - Payment completed");
         sessionStorage.removeItem("paymentProcessing");
         sessionStorage.setItem("paymentProcessed", "true");
@@ -404,11 +398,11 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         window.history.replaceState({}, "", window.location.pathname);
         setStep(3);
         setIsInitializing(false);
-      } else if (paymentParam === "failed" && !hasProcessedPayment) {
+      } else if (paymentParam === "failed") {
         // 결제 실패 처리
+        console.log("Payment failed");
         sessionStorage.removeItem("paymentProcessing");
-        sessionStorage.setItem("paymentProcessed", "true");
-        const orderId = params.get("orderId");
+        sessionStorage.removeItem("paymentProcessed");
         const message = params.get("message");
         // URL 파라미터 제거 (먼저 처리)
         window.history.replaceState({}, "", window.location.pathname);
