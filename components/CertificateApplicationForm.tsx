@@ -299,7 +299,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             const paymentWindow = window.open(
               responseData.data.payurl,
               "payapp_payment",
-              "width=500,height=700,left=200,top=100",
+              "width=800,height=900,left=200,top=100",
             );
 
             if (!paymentWindow) {
