@@ -120,7 +120,6 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
     "no",
   );
   const [showPhotoPreview, setShowPhotoPreview] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<"success" | "pending" | null>(null);
 
   // 전체 선택 함수
   const handleSelectAll = () => {
@@ -396,17 +395,11 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
       const hasProcessedPayment =
         sessionStorage.getItem("paymentProcessed") === "true";
 
-      // 결제 중이 아니고, step=3이 감지되었으면 결제 완료 또는 pending으로 간주
+      // 결제 중이 아니고, step=3이 감지되었으면 결제 완료로 간주
       if (stepParam === "3" && !hasProcessedPayment) {
-        console.log("Setting step to 3 - Payment:", paymentParam);
+        console.log("Setting step to 3 - Payment completed");
         sessionStorage.removeItem("paymentProcessing");
         sessionStorage.setItem("paymentProcessed", "true");
-        // payment 상태 저장
-        if (paymentParam === "pending") {
-          setPaymentStatus("pending");
-        } else {
-          setPaymentStatus("success");
-        }
         // URL 파라미터 제거 (먼저 처리)
         window.history.replaceState({}, "", window.location.pathname);
         setStep(3);
@@ -935,45 +928,14 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             className={styles.stepWrapper}
             style={{ textAlign: "center", justifyContent: "center" }}
           >
-            {paymentStatus === "pending" ? (
-              <>
-                <div style={{
-                  fontSize: "80px",
-                  margin: "0 auto 24px",
-                  width: "240px",
-                  height: "240px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}>
-                  ⏱️
-                </div>
-                <h1 className={styles.title}>무통장입금 신청이 완료되었습니다</h1>
-                <p style={{
-                  marginTop: "16px",
-                  color: "#666",
-                  fontSize: "16px",
-                  lineHeight: "1.6"
-                }}>
-                  계좌번호로 입금해주시면<br/>
-                  입금 확인 후 자동으로 결제가 완료됩니다.<br/>
-                  <span style={{ color: "#f5576c", fontWeight: "600" }}>
-                    입금 확인까지 최대 1영업일 소요됩니다.
-                  </span>
-                </p>
-              </>
-            ) : (
-              <>
-                <Image
-                  src="/complete-check.png"
-                  alt="완료"
-                  width={240}
-                  height={240}
-                  style={{ margin: "0 auto 24px" }}
-                />
-                <h1 className={styles.title}>결제가 완료되었습니다!</h1>
-              </>
-            )}
+            <Image
+              src="/complete-check.png"
+              alt="완료"
+              width={240}
+              height={240}
+              style={{ margin: "0 auto 24px" }}
+            />
+            <h1 className={styles.title}>결제가 완료되었습니다!</h1>
           </motion.div>
         )}
       </AnimatePresence>

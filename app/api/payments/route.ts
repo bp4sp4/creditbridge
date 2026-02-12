@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
       var1: var1,
       skip_cstpage: 'y', // 매출전표 페이지 스킵
       smsuse: 'n', // SMS 발송 안함
+      openpaytype: 'card,kakaopay,naverpay,payco,applepay,myaccount', // 허용할 결제수단
       // 면세 설정
       amount_taxable: '0',           // 과세 금액: 0
       amount_taxfree: price.toString(), // 면세 금액: 전체 가격
