@@ -348,6 +348,38 @@ export async function GET(request: NextRequest) {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
       });
+    } else {
+      // state가 없거나 예상치 못한 값인 경우
+      console.error('Unexpected payment state:', { state, var1, mul_no, tradeid });
+
+      const unknownHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 확인 중</title>
+  </head>
+  <body>
+    <div style="padding: 40px; text-align: center;">
+      <h1>결제 상태를 확인하고 있습니다</h1>
+      <p>잠시만 기다려주세요...</p>
+      <script>
+        setTimeout(function() {
+          if (window.opener) {
+            window.opener.location.href = '/';
+            window.close();
+          } else {
+            window.location.href = '/';
+          }
+        }, 2000);
+      </script>
+    </div>
+  </body>
+</html>`;
+      return new NextResponse(unknownHtml, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      });
     }
   } catch (error) {
     console.error('Payment result GET error:', error);
@@ -659,6 +691,38 @@ export async function POST(request: NextRequest) {
   </body>
 </html>`;
       return new NextResponse(failHtml, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      });
+    } else {
+      // state가 없거나 예상치 못한 값인 경우
+      console.error('Unexpected payment state in POST:', { state, var1, mul_no, tradeid });
+
+      const unknownHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 확인 중</title>
+  </head>
+  <body>
+    <div style="padding: 40px; text-align: center;">
+      <h1>결제 상태를 확인하고 있습니다</h1>
+      <p>잠시만 기다려주세요...</p>
+      <script>
+        setTimeout(function() {
+          if (window.opener) {
+            window.opener.location.href = '/';
+            window.close();
+          } else {
+            window.location.href = '/';
+          }
+        }, 2000);
+      </script>
+    </div>
+  </body>
+</html>`;
+      return new NextResponse(unknownHtml, {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
       });
