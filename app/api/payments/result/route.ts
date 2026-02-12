@@ -367,14 +367,15 @@ export async function GET(request: NextRequest) {
       <h1>결제 상태를 확인하고 있습니다</h1>
       <p>잠시만 기다려주세요...</p>
       <script>
+        // state가 없어도 var1(주문번호)이 있으면 step=3으로 이동
         setTimeout(function() {
           if (window.opener) {
-            window.opener.location.href = '/';
+            window.opener.location.href = '/?payment=success&step=3';
             window.close();
           } else {
-            window.location.href = '/';
+            window.location.href = '/?payment=success&step=3';
           }
-        }, 2000);
+        }, 500);
       </script>
     </div>
   </body>
@@ -716,14 +717,15 @@ export async function POST(request: NextRequest) {
       <h1>결제 상태를 확인하고 있습니다</h1>
       <p>잠시만 기다려주세요...</p>
       <script>
+        // state가 없어도 var1(주문번호)이 있으면 step=3으로 이동
         setTimeout(function() {
           if (window.opener) {
-            window.opener.location.href = '/';
+            window.opener.location.href = '/?payment=success&step=3';
             window.close();
           } else {
-            window.location.href = '/';
+            window.location.href = '/?payment=success&step=3';
           }
-        }, 2000);
+        }, 500);
       </script>
     </div>
   </body>
