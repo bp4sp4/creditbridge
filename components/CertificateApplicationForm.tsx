@@ -396,20 +396,24 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         console.log("Setting step to 3 - Payment completed (stepParam=3 detected)");
         sessionStorage.removeItem("paymentProcessing");
         sessionStorage.setItem("paymentProcessed", "true");
-        // URL 파라미터 제거 (먼저 처리)
-        window.history.replaceState({}, "", window.location.pathname);
         setStep(3);
         setIsInitializing(false);
+        // URL 파라미터 제거 (step 설정 후)
+        setTimeout(() => {
+          window.history.replaceState({}, "", window.location.pathname);
+        }, 100);
       } else if (paymentParam === "failed") {
         // 결제 실패 처리
         console.log("Payment failed");
         sessionStorage.removeItem("paymentProcessing");
         sessionStorage.removeItem("paymentProcessed");
         const message = params.get("message");
-        // URL 파라미터 제거 (먼저 처리)
-        window.history.replaceState({}, "", window.location.pathname);
         alert(`결제가 실패했습니다.\n${message || "다시 시도해주세요."}`);
         setIsInitializing(false);
+        // URL 파라미터 제거 (alert 후)
+        setTimeout(() => {
+          window.history.replaceState({}, "", window.location.pathname);
+        }, 100);
       } else {
         // 일반 페이지 로드
         console.log("Normal page load - no payment params");
