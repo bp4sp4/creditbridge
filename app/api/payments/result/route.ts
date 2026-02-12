@@ -71,6 +71,12 @@ async function sendSlackNotification(data: {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
+
+    console.log('Payment result GET called:', {
+      url: request.url,
+      params: Object.fromEntries(searchParams)
+    });
+
     const supabase = createClient();
 
     // PayApp에서 넘어오는 결제 결과 파라미터
@@ -344,8 +350,39 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('Payment result error:', error);
-    return NextResponse.redirect(new URL('/?payment=error', request.url));
+    console.error('Payment result GET error:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
+
+    // 에러 페이지 HTML 반환 (리다이렉트 대신)
+    const errorHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오류 발생</title>
+  </head>
+  <body>
+    <div style="padding: 40px; text-align: center;">
+      <h1>결제 처리 중 오류가 발생했습니다</h1>
+      <p>잠시 후 다시 시도해주세요.</p>
+      <pre style="text-align: left; background: #f5f5f5; padding: 20px; margin: 20px auto; max-width: 600px; overflow: auto;">
+${error instanceof Error ? error.message : String(error)}
+      </pre>
+      <script>
+        setTimeout(function() {
+          window.location.href = '/?payment=error';
+        }, 3000);
+      </script>
+    </div>
+  </body>
+</html>`;
+    return new NextResponse(errorHtml, {
+      status: 500,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    });
   }
 }
 
