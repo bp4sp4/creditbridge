@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/server';
 
 // PayApp REST API로 결제 요청
 export async function POST(request: NextRequest) {
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 데이터베이스에서 결제 내역 조회
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from('orders')
       .select('*')

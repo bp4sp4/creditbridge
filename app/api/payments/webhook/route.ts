@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * PayApp 결제 웹훅
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     // PayApp은 form-urlencoded로 전송하므로 body를 text로 파싱
     const body = await request.text();
     const params = new URLSearchParams(body);
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const state = params.get('state'); // 1: 성공, 0: 실패
     const tradeid = params.get('tradeid'); // 거래번호
