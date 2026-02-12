@@ -9,7 +9,7 @@ import { cancelPayment, requestPaymentCancellation } from '@/lib/payapp';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const supabase = await createClient();
+    const supabase = createClient();
 
     const { orderId, cancelType, cancelAmount, cancelReason, mulNo } = body;
 
@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = createClient();
 
     // 주문 정보 조회
     const { data: order } = await supabase

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     // PayApp은 form-urlencoded로 전송하므로 body를 text로 파싱
     const body = await request.text();
     const params = new URLSearchParams(body);
-    const supabase = await createClient();
+    const supabase = createClient();
 
     const state = params.get('state'); // 1: 성공, 0: 실패
     const tradeid = params.get('tradeid'); // 거래번호

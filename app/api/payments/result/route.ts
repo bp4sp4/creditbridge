@@ -71,7 +71,7 @@ async function sendSlackNotification(data: {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const supabase = await createClient();
+    const supabase = createClient();
 
     // PayApp에서 넘어오는 결제 결과 파라미터
     const state = searchParams.get('state'); // 결제 결과 상태 (1:성공, 0:실패)
@@ -354,7 +354,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
     const params = new URLSearchParams(body);
-    const supabase = await createClient();
+    const supabase = createClient();
 
     const state = params.get('state'); // 1: 성공, 0: 실패
     const tradeid = params.get('tradeid'); // 거래번호

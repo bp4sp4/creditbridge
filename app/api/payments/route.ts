@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 데이터베이스에서 결제 내역 조회
-    const supabase = await createClient();
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('orders')
       .select('*')
