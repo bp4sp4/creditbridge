@@ -29,7 +29,10 @@ type Application = {
   address_detail?: string;
   postal_code?: string;
   is_checked?: boolean;
+  source?: string;
 };
+
+type TabType = "all" | "bridge" | "prepayment";
 
 export default function AdminApplicationsList() {
   const router = useRouter();
@@ -43,6 +46,7 @@ export default function AdminApplicationsList() {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [allApplications, setAllApplications] = useState<Application[]>([]);
+  const [activeTab, setActiveTab] = useState<TabType>("all");
   const itemsPerPage = 10;
 
   // 로그아웃 함수
@@ -85,28 +89,36 @@ export default function AdminApplicationsList() {
     async function fetchApplications() {
       setLoading(true);
 
-      const { count } = await supabase
-        .from("certificate_applications")
-        .select("*", { count: "exact", head: true });
+      // 탭에 따른 소스 필터
+      const sourceFilter = activeTab === "bridge" ? "bridge" : activeTab === "prepayment" ? "prepayment" : null;
 
-      // 체크된 항목과 체크되지 않은 항목 따로 조회
-      const { data: checkedData } = await supabase
+      let checkedQuery = supabase
         .from("certificate_applications")
         .select("*")
         .eq("is_checked", true)
         .order("created_at", { ascending: false });
 
-      const { data: uncheckedData, error } = await supabase
+      let uncheckedQuery = supabase
         .from("certificate_applications")
         .select("*")
         .eq("is_checked", false)
         .order("created_at", { ascending: false });
 
+      if (sourceFilter) {
+        checkedQuery = checkedQuery.eq("source", sourceFilter);
+        uncheckedQuery = uncheckedQuery.eq("source", sourceFilter);
+      } else {
+        // "전체" 탭: source가 null인 것(기존 데이터)도 포함
+      }
+
+      const { data: checkedData } = await checkedQuery;
+      const { data: uncheckedData, error } = await uncheckedQuery;
+
       if (!error) {
         // 체크되지 않은 항목 먼저, 그 다음 체크된 항목
         const sortedData = [...(uncheckedData || []), ...(checkedData || [])];
         setAllApplications(sortedData);
-        setTotalCount(count || 0);
+        setTotalCount(sortedData.length);
 
         // 체크된 ID 설정
         const checkedIds = new Set((checkedData || []).map((app) => app.id));
@@ -121,7 +133,7 @@ export default function AdminApplicationsList() {
       setLoading(false);
     }
     fetchApplications();
-  }, [currentPage]);
+  }, [currentPage, activeTab]);
 
   // 검색 필터링
   useEffect(() => {
@@ -166,6 +178,13 @@ export default function AdminApplicationsList() {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedApp(null);
+  };
+
+  // 탭 변경
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+    setSearchQuery("");
   };
 
   // 데이터 새로고침
@@ -318,6 +337,33 @@ export default function AdminApplicationsList() {
       </div>
 
       <div className={styles.card}>
+        {/* 탭 */}
+        <div style={{ display: "flex", gap: "0", borderBottom: "1px solid #f2f2f2" }}>
+          {([
+            { key: "all", label: "전체" },
+            { key: "bridge", label: "민간연계 신청" },
+            { key: "prepayment", label: "선납부 신청" },
+          ] as { key: TabType; label: string }[]).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => handleTabChange(tab.key)}
+              style={{
+                padding: "14px 24px",
+                fontSize: "14px",
+                fontWeight: activeTab === tab.key ? 700 : 500,
+                color: activeTab === tab.key ? "#3182f6" : "#8b95a1",
+                background: "none",
+                border: "none",
+                borderBottom: activeTab === tab.key ? "2px solid #3182f6" : "2px solid transparent",
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* 검색창 */}
         <div className={styles.searchContainer}>
           <div className={styles.searchWrapper}>
@@ -349,7 +395,8 @@ export default function AdminApplicationsList() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th style={{ width: "40px" }}>선택</th>
+                <th style={{ width: "40px", whiteSpace: "nowrap" }}>선택</th>
+                <th>구분</th>
                 <th>신청자</th>
                 <th>연락처 / 생년월일</th>
                 <th>신청 자격증</th>
@@ -385,6 +432,20 @@ export default function AdminApplicationsList() {
                       onChange={() => handleCheckChange(app.id)}
                       className={styles.checkboxInput}
                     />
+                  </td>
+                  <td>
+                    <span style={{
+                      display: "inline-block",
+                      padding: "3px 8px",
+                      borderRadius: "4px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      backgroundColor: app.source === "prepayment" ? "#ede9fe" : "#dbeafe",
+                      color: app.source === "prepayment" ? "#6d28d9" : "#1d4ed8",
+                      whiteSpace: "nowrap",
+                    }}>
+                      {app.source === "prepayment" ? "선납부" : "민간연계"}
+                    </span>
                   </td>
                   <td className={styles.nameCell}>{highlightText(app.name, searchQuery)}</td>
                   <td>

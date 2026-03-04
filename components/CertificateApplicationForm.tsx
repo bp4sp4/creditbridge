@@ -269,6 +269,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             order_id: orderId,
             amount: amount,
             payment_status: "pending",
+            source: "bridge",
           },
         ])
         .select()
