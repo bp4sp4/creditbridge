@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useState, Suspense, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "../lib/supabase/client";
-
 import StepIndicator from "./StepIndicator";
 import styles from "./stepflow.module.css";
 import DaumPostcodeInput from "./DaumPostcodeInput";
