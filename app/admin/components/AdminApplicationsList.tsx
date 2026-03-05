@@ -342,7 +342,7 @@ export default function AdminApplicationsList() {
         <div style={{ display: "flex", gap: "0", borderBottom: "1px solid #f2f2f2" }}>
           {([
             { key: "all", label: "전체" },
-            { key: "bridge", label: "민간연계 신청" },
+            { key: "bridge", label: "학점연계 신청" },
             { key: "prepayment", label: "선납부 신청" },
           ] as { key: TabType; label: string }[]).map((tab) => (
             <button
@@ -445,7 +445,7 @@ export default function AdminApplicationsList() {
                       color: app.source === "prepayment" ? "#6d28d9" : "#1d4ed8",
                       whiteSpace: "nowrap",
                     }}>
-                      {app.source === "prepayment" ? "선납부" : "민간연계"}
+                      {app.source === "prepayment" ? "선납부" : "학점연계"}
                     </span>
                   </td>
                   <td className={styles.nameCell}>{highlightText(app.name, searchQuery)}</td>

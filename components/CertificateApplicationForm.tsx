@@ -334,8 +334,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                       // 크로스도메인 체크 - 같은 도메인이면 URL 확인 가능
                       const popupUrl = paymentWindow.location.href;
                       if (
-                        popupUrl.includes("?payment=success") ||
-                        popupUrl.includes("api/payments/result")
+                        popupUrl.includes("?payment=success")
                       ) {
                         // 결제 완료 페이지 도달 - 팝업 닫기 신호 전송
                         if (!popupClosing) {
@@ -581,336 +580,311 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 placeholder="성함을 입력해주세요"
               />
             </div>
-            {formData.name && (
-              <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>
-                  연락처
-                  <span className={styles.requiredMark}>*</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  className={styles.inputField}
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>
+                연락처
+                <span className={styles.requiredMark}>*</span>
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                className={styles.inputField}
+                style={{
+                  borderColor:
+                    formData.contact && !isPhoneValid ? "#ef4444" : undefined,
+                  backgroundColor:
+                    formData.contact && !isPhoneValid ? "#fee2e2" : undefined,
+                }}
+                value={formData.contact}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    contact: formatPhoneNumber(e.target.value),
+                  })
+                }
+                placeholder="010-0000-0000"
+                maxLength={13}
+              />
+              {formData.contact && !isPhoneValid && (
+                <p
                   style={{
-                    borderColor:
-                      formData.contact && !isPhoneValid ? "#ef4444" : undefined,
-                    backgroundColor:
-                      formData.contact && !isPhoneValid ? "#fee2e2" : undefined,
+                    color: "#dc2626",
+                    fontSize: "12px",
+                    marginTop: "4px",
                   }}
-                  value={formData.contact}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      contact: formatPhoneNumber(e.target.value),
-                    })
-                  }
-                  placeholder="010-0000-0000"
-                  maxLength={13}
-                />
-                {formData.contact && !isPhoneValid && (
+                >
+                  010-XXXX-XXXX 형식으로 입력해주세요
+                </p>
+              )}
+            </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>
+                생년월일
+                <span className={styles.requiredMark}>*</span>
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                className={styles.inputField}
+                style={{
+                  borderColor:
+                    formData.birth_prefix &&
+                    formData.birth_prefix.length !== 6
+                      ? "#fbbf24"
+                      : undefined,
+                  backgroundColor:
+                    formData.birth_prefix &&
+                    formData.birth_prefix.length !== 6
+                      ? "#fef3c7"
+                      : undefined,
+                }}
+                value={formData.birth_prefix}
+                onChange={(e) => {
+                  const numbers = e.target.value
+                    .replace(/[^0-9]/g, "")
+                    .slice(0, 6);
+                  setFormData({ ...formData, birth_prefix: numbers });
+                }}
+                placeholder="YYMMDD (예: 730104)"
+              />
+              {formData.birth_prefix &&
+                formData.birth_prefix.length !== 6 && (
                   <p
                     style={{
-                      color: "#dc2626",
+                      color: "#b45309",
                       fontSize: "12px",
                       marginTop: "4px",
                     }}
                   >
-                    010-XXXX-XXXX 형식으로 입력해주세요
+                    6자리 숫자를 입력해주세요 (예: 730104)
                   </p>
                 )}
-              </div>
-            )}
-            {formData.name && formData.contact && isPhoneValid && (
-              <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>
-                  생년월일
-                  <span className={styles.requiredMark}>*</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  className={styles.inputField}
+              {formData.birth_prefix &&
+                formData.birth_prefix.length === 6 && (
+                  <p
+                    style={{
+                      color: "#16a34a",
+                      fontSize: "12px",
+                      marginTop: "4px",
+                    }}
+                  >
+                    ✓ 올바른 형식입니다
+                  </p>
+                )}
+            </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>
+                자격증 수령 주소
+                <span className={styles.requiredMark}>*</span>
+              </label>
+              <DaumPostcodeInput
+                onComplete={({ zonecode, address, addressDetail }) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    postalCode: zonecode,
+                    addressMain: address,
+                    addressDetail: "",
+                    address: `${zonecode} ${address}`,
+                  }));
+                }}
+              />
+              {formData.addressMain && (
+                <div
                   style={{
-                    borderColor:
-                      formData.birth_prefix &&
-                      formData.birth_prefix.length !== 6
-                        ? "#fbbf24"
-                        : undefined,
-                    backgroundColor:
-                      formData.birth_prefix &&
-                      formData.birth_prefix.length !== 6
-                        ? "#fef3c7"
-                        : undefined,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                    marginTop: 12,
                   }}
-                  value={formData.birth_prefix}
-                  onChange={(e) => {
-                    const numbers = e.target.value
-                      .replace(/[^0-9]/g, "")
-                      .slice(0, 6);
-                    setFormData({ ...formData, birth_prefix: numbers });
-                  }}
-                  placeholder="YYMMDD (예: 730104)"
-                />
-                {formData.birth_prefix &&
-                  formData.birth_prefix.length !== 6 && (
-                    <p
-                      style={{
-                        color: "#b45309",
-                        fontSize: "12px",
-                        marginTop: "4px",
-                      }}
-                    >
-                      6자리 숫자를 입력해주세요 (예: 730104)
-                    </p>
-                  )}
-                {formData.birth_prefix &&
-                  formData.birth_prefix.length === 6 && (
-                    <p
-                      style={{
-                        color: "#16a34a",
-                        fontSize: "12px",
-                        marginTop: "4px",
-                      }}
-                    >
-                      ✓ 올바른 형식입니다
-                    </p>
-                  )}
-              </div>
-            )}
-            {formData.name &&
-              isPhoneValid &&
-              formData.birth_prefix.length === 6 && (
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel}>
-                    자격증 수령 주소
-                    <span className={styles.requiredMark}>*</span>
-                  </label>
-                  <DaumPostcodeInput
-                    onComplete={({ zonecode, address, addressDetail }) => {
+                >
+                  <input
+                    type="text"
+                    className={styles.inputField}
+                    value={`${formData.postalCode} ${formData.addressMain}`}
+                    readOnly
+                    tabIndex={-1}
+                  />
+                  <input
+                    type="text"
+                    className={styles.inputField}
+                    value={formData.addressDetail}
+                    onChange={(e) => {
                       setFormData((prev) => ({
                         ...prev,
-                        postalCode: zonecode,
-                        addressMain: address,
-                        addressDetail: "",
-                        address: `${zonecode} ${address}`,
+                        addressDetail: e.target.value,
+                        address: `${prev.postalCode} ${prev.addressMain} ${e.target.value}`,
                       }));
                     }}
+                    placeholder="상세주소 (예: 202호)"
                   />
-                  {formData.addressMain && (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 8,
-                        marginTop: 12,
-                      }}
-                    >
-                      <input
-                        type="text"
-                        className={styles.inputField}
-                        value={`${formData.postalCode} ${formData.addressMain}`}
-                        readOnly
-                        tabIndex={-1}
-                      />
-                      <input
-                        type="text"
-                        className={styles.inputField}
-                        value={formData.addressDetail}
-                        onChange={(e) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            addressDetail: e.target.value,
-                            address: `${prev.postalCode} ${prev.addressMain} ${e.target.value}`,
-                          }));
+                </div>
+              )}
+            </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>
+                자격증 선택
+                <span className={styles.requiredMark}>*</span>
+              </label>
+              <div
+                className={`${styles.inputField} ${styles.courseSelectField}`}
+                onClick={() => setShowCertModal(true)}
+              >
+                <span
+                  className={
+                    formData.certificates.length > 0
+                      ? styles.courseSelectedText
+                      : styles.coursePlaceholder
+                  }
+                  style={{
+                    display: "inline-block",
+                    maxWidth: 480,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {formData.certificates.length > 0
+                    ? formData.certificates.length <= 3
+                      ? formData.certificates.join(", ")
+                      : `${formData.certificates.slice(0, 3).join(", ")} 외 ${formData.certificates.length - 3}개`
+                    : "발급받을 자격증을 선택하세요"}
+                </span>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M5 7.5L10 12.5L15 7.5"
+                    stroke="#6B7280"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>
+                증명사진 첨부 여부
+                <span className={styles.optionalNote}>
+                  (*미첨부 시 사진란 공란, 효력 영향 없음)
+                </span>
+              </label>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "16px",
+                  marginBottom: "12px",
+                }}
+              >
+                <label
+                  style={{ display: "flex", alignItems: "center", gap: 4 }}
+                >
+                  <input
+                    type="radio"
+                    name="photoUpload"
+                    checked={photoUploadChoice === "yes"}
+                    onChange={() => {
+                      setPhotoUploadChoice("yes");
+                    }}
+                  />
+                  예
+                </label>
+                <label
+                  style={{ display: "flex", alignItems: "center", gap: 4 }}
+                >
+                  <input
+                    type="radio"
+                    name="photoUpload"
+                    checked={photoUploadChoice === "no"}
+                    onChange={() => {
+                      setPhotoUploadChoice("no");
+                      setFormData({ ...formData, photo: null });
+                    }}
+                  />
+                  아니요
+                </label>
+              </div>
+              {photoUploadChoice === "yes" && (
+                <>
+                  <label className={styles.inputLabel}>증명사진 첨부</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className={styles.inputField}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        photo: e.target.files?.[0] || null,
+                      })
+                    }
+                    style={{
+                      textAlign: "center",
+                      cursor: "pointer",
+                      color: formData.photo ? "#4e5968" : "#9ca3af",
+                      fontSize: "14px",
+                      fontWeight: formData.photo ? "500" : "400",
+                    }}
+                  />
+                  {formData.photo && (
+                    <div style={{ marginTop: 16, textAlign: "center" }}>
+                      <img
+                        src={URL.createObjectURL(formData.photo)}
+                        alt="미리보기"
+                        onClick={() => setShowPhotoPreview(true)}
+                        style={{
+                          width: 120,
+                          height: 120,
+                          objectFit: "cover",
+                          borderRadius: 12,
+                          border: "1.5px solid #e5e8eb",
+                          boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)",
+                          cursor: "pointer",
+                          transition: "transform 0.2s",
                         }}
-                        placeholder="상세주소 (예: 202호)"
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.transform = "scale(1.05)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.transform = "scale(1)";
+                        }}
                       />
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: "#999",
+                          marginTop: 8,
+                        }}
+                      >
+                        클릭하여 크게 보기
+                      </p>
                     </div>
                   )}
-                </div>
+                </>
               )}
-            {formData.name &&
-              formData.contact &&
-              formData.birth_prefix.length === 6 &&
-              formData.addressMain && (
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel}>
-                    자격증 선택
-                    <span className={styles.requiredMark}>*</span>
-                  </label>
-                  <div
-                    className={`${styles.inputField} ${styles.courseSelectField}`}
-                    onClick={() => setShowCertModal(true)}
-                  >
-                    <span
-                      className={
-                        formData.certificates.length > 0
-                          ? styles.courseSelectedText
-                          : styles.coursePlaceholder
-                      }
-                      style={{
-                        display: "inline-block",
-                        maxWidth: 480,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {formData.certificates.length > 0
-                        ? formData.certificates.length <= 3
-                          ? formData.certificates.join(", ")
-                          : `${formData.certificates.slice(0, 3).join(", ")} 외 ${formData.certificates.length - 3}개`
-                        : "발급받을 자격증을 선택하세요"}
-                    </span>
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M5 7.5L10 12.5L15 7.5"
-                        stroke="#6B7280"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              )}
-            {formData.name &&
-              formData.contact &&
-              formData.birth_prefix.length === 6 &&
-              formData.addressMain &&
-              formData.certificates.length > 0 && (
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel}>
-                    증명사진 첨부 여부
-                    <span className={styles.optionalNote}>
-                      (*미첨부 시 사진란 공란, 효력 영향 없음)
-                    </span>
-                  </label>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "16px",
-                      marginBottom: "12px",
-                    }}
-                  >
-                    <label
-                      style={{ display: "flex", alignItems: "center", gap: 4 }}
-                    >
-                      <input
-                        type="radio"
-                        name="photoUpload"
-                        checked={photoUploadChoice === "yes"}
-                        onChange={() => {
-                          setPhotoUploadChoice("yes");
-                        }}
-                      />
-                      예
-                    </label>
-                    <label
-                      style={{ display: "flex", alignItems: "center", gap: 4 }}
-                    >
-                      <input
-                        type="radio"
-                        name="photoUpload"
-                        checked={photoUploadChoice === "no"}
-                        onChange={() => {
-                          setPhotoUploadChoice("no");
-                          setFormData({ ...formData, photo: null });
-                        }}
-                      />
-                      아니요
-                    </label>
-                  </div>
-                  {photoUploadChoice === "yes" && (
-                    <>
-                      <label className={styles.inputLabel}>증명사진 첨부</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className={styles.inputField}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            photo: e.target.files?.[0] || null,
-                          })
-                        }
-                        style={{
-                          textAlign: "center",
-                          cursor: "pointer",
-                          color: formData.photo ? "#4e5968" : "#9ca3af",
-                          fontSize: "14px",
-                          fontWeight: formData.photo ? "500" : "400",
-                        }}
-                      />
-                      {formData.photo && (
-                        <div style={{ marginTop: 16, textAlign: "center" }}>
-                          <img
-                            src={URL.createObjectURL(formData.photo)}
-                            alt="미리보기"
-                            onClick={() => setShowPhotoPreview(true)}
-                            style={{
-                              width: 120,
-                              height: 120,
-                              objectFit: "cover",
-                              borderRadius: 12,
-                              border: "1.5px solid #e5e8eb",
-                              boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)",
-                              cursor: "pointer",
-                              transition: "transform 0.2s",
-                            }}
-                            onMouseOver={(e) => {
-                              e.currentTarget.style.transform = "scale(1.05)";
-                            }}
-                            onMouseOut={(e) => {
-                              e.currentTarget.style.transform = "scale(1)";
-                            }}
-                          />
-                          <p
-                            style={{
-                              fontSize: 12,
-                              color: "#999",
-                              marginTop: 8,
-                            }}
-                          >
-                            클릭하여 크게 보기
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
+            </div>
 
-            {formData.name &&
-              formData.contact &&
-              formData.birth_prefix.length === 6 &&
-              formData.addressMain &&
-              formData.certificates.length > 0 && (
-                <div
-                  className={styles.inputGroup}
-                  style={{ marginTop: "20px" }}
-                >
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={privacyAgreed}
-                      onChange={(e) => setPrivacyAgreed(e.target.checked)}
-                      className={styles.checkbox}
-                    />
-                    <span>
-                      <button
-                        type="button"
-                        className={styles.privacyLink}
-                        onClick={() => setShowPrivacyModal(true)}
-                      >
-                        개인정보처리방침
-                      </button>{" "}
-                      동의
-                    </span>
-                  </label>
-                </div>
-              )}
+            <div
+              className={styles.inputGroup}
+              style={{ marginTop: "20px" }}
+            >
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={privacyAgreed}
+                  onChange={(e) => setPrivacyAgreed(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <span>
+                  <button
+                    type="button"
+                    className={styles.privacyLink}
+                    onClick={() => setShowPrivacyModal(true)}
+                  >
+                    개인정보처리방침
+                  </button>{" "}
+                  동의
+                </span>
+              </label>
+            </div>
             <div
               style={{
                 display: "flex",
