@@ -126,9 +126,11 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
         photoUrl = fileName;
       }
 
-      const { error } = await supabase
-        .from('certificate_applications')
-        .update({
+      const response = await fetch('/api/applications', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: application.id,
           name: formData.name,
           contact: formData.contact,
           birth_prefix: formData.birth_prefix,
@@ -142,10 +144,11 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
           paid_at: formData.paid_at,
           mul_no: formData.mul_no,
           photo_url: photoUrl,
-        })
-        .eq('id', application.id);
+        }),
+      });
+      const result = await response.json();
 
-      if (!error) {
+      if (!result.error) {
         alert('수정되었습니다.');
         setIsEditing(false);
         // 즉시 UI 업데이트
@@ -166,13 +169,12 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from('certificate_applications')
-        .delete()
-        .eq('id', application.id);
+      const response = await fetch(`/api/applications?id=${application.id}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
 
-      if (!error) {
+      if (!result.error) {
         alert('삭제되었습니다.');
         // 즉시 UI 업데이트
         if (onDelete) {

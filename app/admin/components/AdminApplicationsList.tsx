@@ -268,7 +268,6 @@ export default function AdminApplicationsList() {
 
   // 체크박스 핸들러
   const handleCheckChange = async (id: string) => {
-    const supabase = createClient();
     const isCurrentlyChecked = checkedIds.has(id);
     const newCheckedState = !isCurrentlyChecked;
 
@@ -287,13 +286,15 @@ export default function AdminApplicationsList() {
     // 체크 상태만 변경
 
     // DB에 저장
-    const { error } = await supabase
-      .from("certificate_applications")
-      .update({ is_checked: newCheckedState })
-      .eq("id", id);
+    const response = await fetch('/api/applications', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, is_checked: newCheckedState }),
+    });
+    const result = await response.json();
 
-    if (error) {
-      console.error("DB 저장 실패:", error);
+    if (result.error) {
+      console.error("DB 저장 실패:", result.error);
       // 오류 발생 시 즉시 되돌리기
       setCheckedIds((prev) => {
         const newSet = new Set(prev);

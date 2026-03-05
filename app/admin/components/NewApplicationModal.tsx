@@ -128,29 +128,35 @@ export default function NewApplicationModal({ isOpen, onClose, onRefresh, onAdd 
         photoUrl = fileName;
       }
 
-      const { error } = await supabase.from('certificate_applications').insert([
-        {
-          name: formData.name,
-          contact: formData.contact,
-          birth_prefix: formData.birth_prefix,
-          address: `${formData.address_main} ${formData.address_detail}`,
-          address_main: formData.address_main,
-          address_detail: formData.address_detail,
-          certificates: formData.certificates,
-          cash_receipt: formData.cash_receipt,
-          payment_status: formData.payment_status,
-          amount: formData.amount,
-          paid_at: formData.paid_at ? new Date(formData.paid_at).toISOString() : null,
-          mul_no: formData.mul_no || null,
-          photo_url: photoUrl || null,
-          order_id: null,
-          trade_id: null,
-          pay_method: null,
-          failed_at: null,
-          failed_message: null,
-          cancelled_at: null,
-        },
-      ]);
+      const payload = {
+        name: formData.name,
+        contact: formData.contact,
+        birth_prefix: formData.birth_prefix,
+        address: `${formData.address_main} ${formData.address_detail}`,
+        address_main: formData.address_main,
+        address_detail: formData.address_detail,
+        certificates: formData.certificates,
+        cash_receipt: formData.cash_receipt,
+        payment_status: formData.payment_status,
+        amount: formData.amount,
+        paid_at: formData.paid_at ? new Date(formData.paid_at).toISOString() : null,
+        mul_no: formData.mul_no || null,
+        photo_url: photoUrl || null,
+        order_id: null,
+        trade_id: null,
+        pay_method: null,
+        failed_at: null,
+        failed_message: null,
+        cancelled_at: null,
+      };
+
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      const error = result.error ? result : null;
 
       if (!error) {
         alert('등록되었습니다.');
