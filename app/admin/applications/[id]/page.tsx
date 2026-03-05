@@ -63,18 +63,19 @@ export default function ApplicationDetailPage() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from('certificate_applications')
-        .update(formData)
-        .eq('id', id);
+      const res = await fetch('/api/applications', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const result = await res.json();
 
-      if (!error) {
+      if (res.ok) {
         setApplication(formData);
         setIsEditing(false);
         alert('수정되었습니다.');
       } else {
-        alert('수정 중 오류가 발생했습니다.');
+        alert(`수정 중 오류가 발생했습니다: ${result.error}`);
       }
     } catch (err) {
       alert('저장 중 오류가 발생했습니다.');
@@ -88,17 +89,16 @@ export default function ApplicationDetailPage() {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from('certificate_applications')
-        .delete()
-        .eq('id', id);
+      const res = await fetch(`/api/applications?id=${id}`, {
+        method: 'DELETE',
+      });
 
-      if (!error) {
+      if (res.ok) {
         alert('삭제되었습니다.');
         router.push('/admin');
       } else {
-        alert('삭제 중 오류가 발생했습니다.');
+        const result = await res.json();
+        alert(`삭제 중 오류가 발생했습니다: ${result.error}`);
       }
     } catch (err) {
       alert('삭제 중 오류가 발생했습니다.');

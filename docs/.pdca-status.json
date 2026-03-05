@@ -1,11 +1,12 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-05T07:41:07.226Z",
+  "lastUpdated": "2026-03-05T07:48:11.695Z",
   "activeFeatures": [
     "creaditbridge",
     "admin",
     "supabase",
-    "applications"
+    "applications",
+    "[id]"
   ],
   "primaryFeature": "creaditbridge",
   "features": {
@@ -60,6 +61,19 @@
         "lastUpdated": "2026-03-05T07:40:36.183Z"
       },
       "lastFile": "/Users/korhrd/Documents/GitHub/creaditbridge/app/api/applications/route.ts"
+    },
+    "[id]": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-05T07:47:46.737Z",
+        "lastUpdated": "2026-03-05T07:48:11.695Z"
+      },
+      "lastFile": "/Users/korhrd/Documents/GitHub/creaditbridge/app/admin/applications/[id]/page.tsx"
     }
   },
   "pipeline": {
@@ -70,7 +84,7 @@
   "session": {
     "startedAt": "2026-02-25T08:40:21.464Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-05T07:41:07.226Z"
+    "lastActivity": "2026-03-05T07:48:11.695Z"
   },
   "history": [
     {
@@ -154,6 +168,24 @@
     {
       "timestamp": "2026-03-05T07:41:07.226Z",
       "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T07:47:46.737Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T07:48:06.272Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T07:48:11.695Z",
+      "feature": "[id]",
       "phase": "do",
       "action": "updated"
     }
