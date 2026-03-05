@@ -113,7 +113,8 @@ export default function DetailModal({ application, onClose, onRefresh, onDelete,
 
       // 새로운 사진이 선택된 경우 업로드
       if (photoFile) {
-        const fileName = `${Date.now()}-${photoFile.name}`;
+        const safeName = photoFile.name.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/_+/g, '_');
+        const fileName = `${Date.now()}-${safeName}`;
         const { error: uploadError } = await supabase.storage
           .from('photos')
           .upload(fileName, photoFile);

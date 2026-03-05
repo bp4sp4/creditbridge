@@ -116,7 +116,8 @@ export default function NewApplicationModal({ isOpen, onClose, onRefresh, onAdd 
 
       // 사진 업로드
       if (photoFile) {
-        const fileName = `${Date.now()}-${photoFile.name}`;
+        const safeName = photoFile.name.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/_+/g, '_');
+        const fileName = `${Date.now()}-${safeName}`;
         const { error: uploadError } = await supabase.storage
           .from('photos')
           .upload(fileName, photoFile);
