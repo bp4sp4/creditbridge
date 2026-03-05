@@ -251,30 +251,30 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
       const amount = formData.certificates.length * 100000;
       const orderId = `CERT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // 자격증 신청 + 결제 정보 함께 저장
-      const { data: applicationData, error: insertError } = await supabase
-        .from("certificate_applications")
-        .insert([
-          {
-            name: formData.name,
-            contact: formData.contact,
-            birth_prefix: formData.birth_prefix,
-            address: formData.address,
-            address_main: formData.addressMain,
-            address_detail: formData.addressDetail,
-            certificates: formData.certificates,
-            cash_receipt: formData.cash_receipt,
-            photo_url,
-            order_id: orderId,
-            amount: amount,
-            payment_status: "pending",
-            source: "bridge",
-          },
-        ])
-        .select()
-        .single();
+      // 자격증 신청 + 결제 정보 함께 저장 (서버 API 통해 service_role key 사용)
+      const appResponse = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          contact: formData.contact,
+          birth_prefix: formData.birth_prefix,
+          address: formData.address,
+          address_main: formData.addressMain,
+          address_detail: formData.addressDetail,
+          certificates: formData.certificates,
+          cash_receipt: formData.cash_receipt,
+          photo_url,
+          order_id: orderId,
+          amount: amount,
+          payment_status: "pending",
+          source: "bridge",
+        }),
+      });
 
-      if (insertError) throw insertError;
+      const appResult = await appResponse.json();
+      if (!appResponse.ok) throw new Error(appResult.error || "신청 저장 실패");
+      const applicationData = appResult.data;
 
       // 서버 엔드포인트로 PayApp 결제 요청 (CORS 우회)
       try {
