@@ -343,7 +343,7 @@ export default function AdminApplicationsList() {
           {([
             { key: "all", label: "전체" },
             { key: "bridge", label: "학점연계 신청" },
-            { key: "prepayment", label: "선납부 신청" },
+            { key: "prepayment", label: "교육원" },
           ] as { key: TabType; label: string }[]).map((tab) => (
             <button
               key={tab.key}
