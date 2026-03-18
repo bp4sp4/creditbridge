@@ -18,7 +18,10 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nImprove popup closure detection and handling\n\n- Detect when popup navigates to payment result page\n- Actively close popup from parent window after completion detected\n- Add timeout fallback \\(20 seconds\\) for cross-domain scenarios\n- Log popup status for debugging\n- Wait 1 second after closing popup before navigating parent page\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit:*)",
       "Bash(git restore:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npx tsc --noEmit 2>&1 | head -30)",
+      "Bash(npx tsc --noEmit 2>&1 | head -20)",
+      "Bash(npx tsc --noEmit 2>&1)"
     ]
   }
 }

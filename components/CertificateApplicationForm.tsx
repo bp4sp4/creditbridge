@@ -91,6 +91,9 @@ const CERTIFICATE_CATEGORIES = [
   {
     label: "신규",
     options: [
+      "간병사",
+      "베이비시터",
+      "가족상담사",
       "북아트1급",
       "손유희지도사",
       "유튜브크리에이터",
@@ -125,13 +128,25 @@ const CERTIFICATE_CATEGORIES = [
   },
 ];
 
+// 2+1 패키지 자격증
+const PACKAGE_CERTS = ["간병사", "베이비시터", "가족상담사"];
+const PACKAGE_PRICE = 200000; // 3개 묶음 20만원
+
+// 결제 금액 계산 함수
+function calcAmount(certs: string[]): number {
+  const pkgCount = PACKAGE_CERTS.filter((c) => certs.includes(c)).length;
+  const nonPkgCount = certs.filter((c) => !PACKAGE_CERTS.includes(c)).length;
+  const pkgPrice = pkgCount === 3 ? PACKAGE_PRICE : pkgCount * 100000;
+  return pkgPrice + nonPkgCount * 100000;
+}
+
 function StepFlowContent({ clickSource }: { clickSource: string }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showCertModal, setShowCertModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
-  const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
+  const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(-1);
   const [isInitializing, setIsInitializing] = useState(true);
   const [photoUploadChoice, setPhotoUploadChoice] = useState<"yes" | "no">(
     "no",
@@ -247,8 +262,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         photo_url = data?.path;
       }
 
-      // 결제 금액 계산 (자격증 개수 * 100,000원)
-      const amount = formData.certificates.length * 100000;
+      // 결제 금액 계산 (2+1 패키지 할인 적용)
+      const amount = calcAmount(formData.certificates);
       const orderId = `CERT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // 자격증 신청 + 결제 정보 함께 저장 (서버 API 통해 service_role key 사용)
@@ -291,7 +306,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           body: JSON.stringify({
             orderId,
             goodname: `자격증 취득 신청 (${formData.certificates.length}개)`,
-            price: formData.certificates.length * 100000,
+            price: calcAmount(formData.certificates),
             recvphone: formData.contact,
             recvname: formData.name,
             var1: orderId,
@@ -956,6 +971,22 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             <div className={styles.certModalBody}>
               {/* 좌측: 카테고리 리스트 */}
               <div className={styles.certCategoryList}>
+                {/* 2+1 패키지 카드 */}
+                <button
+                  className={`${styles.certCategoryItem} ${selectedCategoryIdx === -1 ? styles.certCategoryItemActive : styles.certCategoryItemInactive}`}
+                  onClick={() => setSelectedCategoryIdx(-1)}
+                  style={{
+                    background: selectedCategoryIdx === -1
+                      ? "#3b82f6"
+                      : "#eff6ff",
+                    border: "1.5px solid #93c5fd",
+                    color: selectedCategoryIdx === -1 ? "#fff" : "#2563eb",
+                    fontWeight: "700",
+                  }}
+                >
+                  <span style={{ whiteSpace: "pre-line" }}>★ 2+1 이벤트</span>
+                </button>
+
                 {CERTIFICATE_CATEGORIES.map((cat, idx) => (
                   <button
                     key={`category-${idx}`}
@@ -972,36 +1003,73 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 <div className={styles.certListWrapper}>
                   <div className={styles.certCategorySection}>
                     <div className={styles.certListContainer}>
-                      {/* 카테고리 전체 토글 버튼 */}
-                      <button
-                        key={`all-${selectedCategoryIdx}`}
-                        onClick={() =>
-                          handleToggleCategoryAll(selectedCategoryIdx)
-                        }
-                        className={`${styles.certListItem} ${CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.every((o) => formData.certificates.includes(o)) ? styles.certListItemSelected : ""}`}
-                      >
-                        <span>전체</span>
-                        {CERTIFICATE_CATEGORIES[
-                          selectedCategoryIdx
-                        ].options.every((o) =>
-                          formData.certificates.includes(o),
-                        ) && <span>✓</span>}
-                      </button>
 
-                      {CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.map(
-                        (opt) => (
+                      {selectedCategoryIdx === -1 ? (
+                        /* 패키지 전용 뷰 */
+                        <>
                           <button
-                            key={opt}
-                            onClick={() => handleCertToggle(opt)}
-                            className={`${styles.certListItem} ${formData.certificates.includes(opt) ? styles.certListItemSelected : ""}`}
+                            onClick={() => {
+                              const allSelected = PACKAGE_CERTS.every((c) => formData.certificates.includes(c));
+                              if (allSelected) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  certificates: prev.certificates.filter((c) => !PACKAGE_CERTS.includes(c)),
+                                }));
+                              } else {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  certificates: [...new Set([...prev.certificates, ...PACKAGE_CERTS])],
+                                }));
+                              }
+                            }}
+                            className={`${styles.certListItem} ${PACKAGE_CERTS.every((c) => formData.certificates.includes(c)) ? styles.certListItemSelected : ""}`}
+                            style={{
+                              background: PACKAGE_CERTS.every((c) => formData.certificates.includes(c))
+                                ? "#3b82f6"
+                                : "#eff6ff",
+                              color: PACKAGE_CERTS.every((c) => formData.certificates.includes(c)) ? "#fff" : "#2563eb",
+                              border: "1.5px solid #93c5fd",
+                              fontWeight: "700",
+                            }}
                           >
-                            <span>{opt}</span>
-                            {formData.certificates.includes(opt) && (
-                              <span>✓</span>
-                            )}
+                            <span>3개 전체 선택</span>
+                            {PACKAGE_CERTS.every((c) => formData.certificates.includes(c)) && <span>✓</span>}
                           </button>
-                        ),
+                          {PACKAGE_CERTS.map((opt) => (
+                            <button
+                              key={opt}
+                              onClick={() => handleCertToggle(opt)}
+                              className={`${styles.certListItem} ${formData.certificates.includes(opt) ? styles.certListItemSelected : ""}`}
+                            >
+                              <span>{opt}</span>
+                              {formData.certificates.includes(opt) && <span>✓</span>}
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        /* 일반 카테고리 뷰 */
+                        <>
+                          <button
+                            key={`all-${selectedCategoryIdx}`}
+                            onClick={() => handleToggleCategoryAll(selectedCategoryIdx)}
+                            className={`${styles.certListItem} ${CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.every((o) => formData.certificates.includes(o)) ? styles.certListItemSelected : ""}`}
+                          >
+                            <span>전체</span>
+                            {CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.every((o) => formData.certificates.includes(o)) && <span>✓</span>}
+                          </button>
+                          {CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.map((opt) => (
+                            <button
+                              key={opt}
+                              onClick={() => handleCertToggle(opt)}
+                              className={`${styles.certListItem} ${formData.certificates.includes(opt) ? styles.certListItemSelected : ""}`}
+                            >
+                              <span>{opt}</span>
+                              {formData.certificates.includes(opt) && <span>✓</span>}
+                            </button>
+                          ))}
+                        </>
                       )}
+
                     </div>
                   </div>
                 </div>
@@ -1020,9 +1088,14 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 <span className={styles.selectedCertPrice}>
                   총{" "}
                   <span className={styles.selectedCertPriceNumber}>
-                    {(formData.certificates.length * 100000).toLocaleString()}
+                    {calcAmount(formData.certificates).toLocaleString()}
                   </span>{" "}
                   원
+                  {PACKAGE_CERTS.every((c) => formData.certificates.includes(c)) && (
+                    <span style={{ fontSize: "11px", color: "#ef4444", marginLeft: 4 }}>
+                      (2+1 패키지 할인 적용)
+                    </span>
+                  )}
                 </span>
               </div>
               <div className={styles.selectedCertList}>
