@@ -26,18 +26,25 @@ const CERTIFICATE_CATEGORIES = [
       "지역아동교육지도사1급",
       "방과후돌봄교실지도사1급",
       "방과후학교지도사1급",
-      "진로적성상담사1급/인성지도사",
+      "진로적성상담사1급",
       "심리상담사1급",
     ],
   },
   {
     label: "★필수★\n 청소년복지분야",
     options: [
-      "진로적성상담사1급/인성지도사",
+      "진로적성상담사1급",
       "심리상담사1급",
       "독서지도사1급",
       "학교폭력예방상담사1급",
-      "인성지도사1급",
+    ],
+  },
+  {
+    label: "공통분야",
+    options: [
+      "자원봉사지도사1급",
+      "심리상담사1급",
+      "안전교육지도사1급",
     ],
   },
   {
@@ -48,7 +55,6 @@ const CERTIFICATE_CATEGORIES = [
       "병원동행매니저1급",
       "심리상담사1급",
       "다문화심리상담사1급",
-      "음악심리상담사1급",
       "아동미술심리상담사1급",
       "부모교육상담사1급",
       "실버인지활동지도사1급",
@@ -68,7 +74,7 @@ const CERTIFICATE_CATEGORIES = [
       "방과후수학지도사1급",
       "방과후학교지도사1급",
       "독서지도사1급",
-      "진로적성상담사1급/인성지도사",
+      "진로적성상담사1급",
       "지역아동교육지도사1급",
       "동화구연지도사1급",
       "아동공예지도사1급",
@@ -115,15 +121,6 @@ const CERTIFICATE_CATEGORIES = [
       "노인심리상담사",
       "아동미술심리상담사",
       "다문화심리상담사",
-      "음악심리상담사",
-    ],
-  },
-  {
-    label: "공통분야",
-    options: [
-      "자원봉사지도사1급",
-      "심리상담사1급",
-      "안전교육지도사1급",
     ],
   },
 ];
@@ -132,12 +129,10 @@ const CERTIFICATE_CATEGORIES = [
 const PACKAGE_CERTS = ["간병사", "베이비시터", "가족상담사"];
 const PACKAGE_PRICE = 200000; // 3개 묶음 20만원
 
-// 결제 금액 계산 함수
+// 결제 금액 계산 함수 (3개 선택 시 2+1 적용 = 20만원)
 function calcAmount(certs: string[]): number {
-  const pkgCount = PACKAGE_CERTS.filter((c) => certs.includes(c)).length;
-  const nonPkgCount = certs.filter((c) => !PACKAGE_CERTS.includes(c)).length;
-  const pkgPrice = pkgCount === 3 ? PACKAGE_PRICE : pkgCount * 100000;
-  return pkgPrice + nonPkgCount * 100000;
+  if (certs.length >= 3) return PACKAGE_PRICE + (certs.length - 3) * 100000;
+  return certs.length * 100000;
 }
 
 function StepFlowContent({ clickSource }: { clickSource: string }) {
@@ -146,7 +141,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   const [showCertModal, setShowCertModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
-  const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(-1);
+  const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
   const [isInitializing, setIsInitializing] = useState(true);
   const [photoUploadChoice, setPhotoUploadChoice] = useState<"yes" | "no">(
     "no",
@@ -971,22 +966,6 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
             <div className={styles.certModalBody}>
               {/* 좌측: 카테고리 리스트 */}
               <div className={styles.certCategoryList}>
-                {/* 2+1 패키지 카드 */}
-                <button
-                  className={`${styles.certCategoryItem} ${selectedCategoryIdx === -1 ? styles.certCategoryItemActive : styles.certCategoryItemInactive}`}
-                  onClick={() => setSelectedCategoryIdx(-1)}
-                  style={{
-                    background: selectedCategoryIdx === -1
-                      ? "#3b82f6"
-                      : "#eff6ff",
-                    border: "1.5px solid #93c5fd",
-                    color: selectedCategoryIdx === -1 ? "#fff" : "#2563eb",
-                    fontWeight: "700",
-                  }}
-                >
-                  <span style={{ whiteSpace: "pre-line" }}>★ 2+1 이벤트</span>
-                </button>
-
                 {CERTIFICATE_CATEGORIES.map((cat, idx) => (
                   <button
                     key={`category-${idx}`}
@@ -1091,9 +1070,9 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     {calcAmount(formData.certificates).toLocaleString()}
                   </span>{" "}
                   원
-                  {PACKAGE_CERTS.every((c) => formData.certificates.includes(c)) && (
+                  {formData.certificates.length >= 3 && (
                     <span style={{ fontSize: "11px", color: "#ef4444", marginLeft: 4 }}>
-                      (2+1 패키지 할인 적용)
+                      (2+1 이벤트 적용)
                     </span>
                   )}
                 </span>

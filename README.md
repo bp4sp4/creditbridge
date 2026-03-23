@@ -45,7 +45,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 병원동행매니저1급
 심리상담사1급
 다문화심리상담사1급
-음악심리상담사1급
+
 아동미술심리상담사1급
 부모교육상담사1급
 실버인지활동지도사1급
@@ -62,7 +62,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 방과후수학지도사1급
 방과후학교지도사1급
 독서지도사1급
-진로적성상담사1급/인성지도사
+진로적성상담사1급
 지역아동교육지도사1급
 동화구연지도사1급
 아동공예지도사1급
