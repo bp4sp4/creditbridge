@@ -180,7 +180,9 @@ background: var(--Atomic-Mono-100, #F2F2F2);
   }
   
   .inputLabel {
-    display: block;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
     font-size: 18px;
     font-weight: 600;
     color: #4e5968;

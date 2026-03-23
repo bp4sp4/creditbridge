@@ -735,6 +735,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               <label className={styles.inputLabel}>
                 자격증 선택
                 <span className={styles.requiredMark}>*</span>
+                <span style={{ marginLeft: '8px', fontSize: '12px', color: '#e85d04', fontWeight: 600 }}>~3/31까지 자격증 2+1 이벤트</span>
               </label>
               <div
                 className={`${styles.inputField} ${styles.courseSelectField}`}
