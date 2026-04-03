@@ -21,7 +21,8 @@
       "Bash(curl:*)",
       "Bash(npx tsc --noEmit 2>&1 | head -30)",
       "Bash(npx tsc --noEmit 2>&1 | head -20)",
-      "Bash(npx tsc --noEmit 2>&1)"
+      "Bash(npx tsc --noEmit 2>&1)",
+      "mcp__notion__API-post-page"
     ]
   }
 }

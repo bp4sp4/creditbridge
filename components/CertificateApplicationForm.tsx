@@ -125,15 +125,27 @@ const CERTIFICATE_CATEGORIES = [
   },
 ];
 
-// 2+1 패키지 자격증
-const PACKAGE_CERTS = ["간병사", "베이비시터", "가족상담사"];
-const PACKAGE_PRICE = 200000; // 3개 묶음 20만원
+// =====================================================================
+// 🎁 2+1 이벤트 코드 (비활성화 상태)
+// 재활성화하려면:
+//   1. 아래 주석 해제
+//   2. calcAmount 함수를 이벤트 버전으로 교체
+//   3. 자격증 선택 라벨 이벤트 문구 주석 해제 (라인 ~738)
+//   4. 모달 하단 "(2+1 이벤트 적용)" 주석 해제 (라인 ~1075)
+// =====================================================================
+// const PACKAGE_CERTS = ["간병사", "베이비시터", "가족상담사"];
+// const PACKAGE_PRICE = 200000; // 3개 묶음 20만원
 
-// 결제 금액 계산 함수 (3개 선택 시 2+1 적용 = 20만원)
+// 결제 금액 계산 함수 (이벤트 없음: 1개당 10만원)
 function calcAmount(certs: string[]): number {
-  if (certs.length >= 3) return PACKAGE_PRICE + (certs.length - 3) * 100000;
   return certs.length * 100000;
 }
+
+// 🎁 2+1 이벤트 활성화 시 아래 함수로 교체:
+// function calcAmount(certs: string[]): number {
+//   if (certs.length >= 3) return PACKAGE_PRICE + (certs.length - 3) * 100000;
+//   return certs.length * 100000;
+// }
 
 function StepFlowContent({ clickSource }: { clickSource: string }) {
   const [step, setStep] = useState(1);
@@ -735,7 +747,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               <label className={styles.inputLabel}>
                 자격증 선택
                 <span className={styles.requiredMark}>*</span>
-                <span style={{ marginLeft: '8px', fontSize: '12px', color: '#e85d04', fontWeight: 600 }}>~3/31까지 자격증 2+1 이벤트</span>
+                {/* 🎁 2+1 이벤트 라벨 (비활성화 상태 - 재활성화 시 주석 해제) */}
+                {/* <span style={{ marginLeft: '8px', fontSize: '12px', color: '#e85d04', fontWeight: 600 }}>~3/31까지 자격증 2+1 이벤트</span> */}
               </label>
               <div
                 className={`${styles.inputField} ${styles.courseSelectField}`}
@@ -1071,11 +1084,12 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     {calcAmount(formData.certificates).toLocaleString()}
                   </span>{" "}
                   원
-                  {formData.certificates.length >= 3 && (
+                  {/* 🎁 2+1 이벤트 적용 표시 (비활성화 상태 - 재활성화 시 주석 해제) */}
+                  {/* {formData.certificates.length >= 3 && (
                     <span style={{ fontSize: "11px", color: "#ef4444", marginLeft: 4 }}>
                       (2+1 이벤트 적용)
                     </span>
-                  )}
+                  )} */}
                 </span>
               </div>
               <div className={styles.selectedCertList}>
