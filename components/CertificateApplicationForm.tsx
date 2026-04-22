@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState, Suspense, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createStorageClient } from "../lib/supabase/client";
 import StepIndicator from "./StepIndicator";
 import styles from "./stepflow.module.css";
 import DaumPostcodeInput from "./DaumPostcodeInput";
@@ -324,13 +323,16 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
 
     try {
       if (formData.photo) {
-        const safeName = sanitizeFileName(formData.photo.name);
-        const storageClient = createStorageClient();
-        const { data, error: uploadError } = await storageClient.storage
-          .from("photos")
-          .upload(`cert_photos/${Date.now()}_${safeName}`, formData.photo);
-        if (uploadError) throw uploadError;
-        photo_url = data?.path;
+        // 서버 라우트로 업로드 (Supabase JWS 이슈 회피)
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", formData.photo);
+        const uploadRes = await fetch("/api/upload-photo", {
+          method: "POST",
+          body: uploadFormData,
+        });
+        const uploadJson = await uploadRes.json();
+        if (!uploadRes.ok) throw new Error(uploadJson.error || "업로드 실패");
+        photo_url = uploadJson.path;
       }
 
       // 결제 금액 계산 (2+1 패키지 할인 적용)
