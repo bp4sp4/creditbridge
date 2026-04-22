@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, Suspense, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createClient } from "../lib/supabase/client";
+import { createStorageClient } from "../lib/supabase/client";
 import StepIndicator from "./StepIndicator";
 import styles from "./stepflow.module.css";
 import DaumPostcodeInput from "./DaumPostcodeInput";
@@ -320,13 +320,13 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
 
   const handleSubmit = async () => {
     setLoading(true);
-    const supabase = createClient();
     let photo_url = null;
 
     try {
       if (formData.photo) {
         const safeName = sanitizeFileName(formData.photo.name);
-        const { data, error: uploadError } = await supabase.storage
+        const storageClient = createStorageClient();
+        const { data, error: uploadError } = await storageClient.storage
           .from("photos")
           .upload(`cert_photos/${Date.now()}_${safeName}`, formData.photo);
         if (uploadError) throw uploadError;
