@@ -184,6 +184,22 @@ function calcEffectiveCount(certs: string[]): number {
   return pairCount + remaining.length;
 }
 
+// DB 저장용: 1+1 페어를 "cert1 & cert2" 한 개 원소로 병합 (오피스에서 1개로 카운트)
+function mergePairsForDb(certs: string[]): string[] {
+  const merged: string[] = [];
+  const rest = [...certs];
+  for (const [cert1, cert2] of ONE_PLUS_ONE_PAIRS) {
+    const i1 = rest.indexOf(cert1);
+    const i2 = rest.indexOf(cert2);
+    if (i1 !== -1 && i2 !== -1) {
+      rest.splice(Math.max(i1, i2), 1);
+      rest.splice(Math.min(i1, i2), 1);
+      merged.push(`${cert1} & ${cert2}`);
+    }
+  }
+  return [...merged, ...rest];
+}
+
 // 🎁 2+1 이벤트 활성화 시 아래 함수로 교체:
 // function calcAmount(certs: string[]): number {
 //   if (certs.length >= 3) return PACKAGE_PRICE + (certs.length - 3) * 100000;
@@ -350,7 +366,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           address: formData.address,
           address_main: formData.addressMain,
           address_detail: formData.addressDetail,
-          certificates: formData.certificates,
+          certificates: mergePairsForDb(formData.certificates),
           cash_receipt: formData.cash_receipt,
           photo_url,
           order_id: orderId,
