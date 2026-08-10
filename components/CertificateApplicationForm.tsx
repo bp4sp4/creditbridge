@@ -172,17 +172,25 @@ function matchPairs(certs: string[]): { remaining: string[]; pairCount: number }
   return { remaining, pairCount };
 }
 
-// 결제 금액 계산 함수: 1+1 페어는 10만원, 나머지 1개당 10만원
+// 결제 금액 계산 함수 (1+1 이벤트 비활성화 — 1개당 10만원)
 function calcAmount(certs: string[]): number {
-  const { remaining, pairCount } = matchPairs(certs);
-  return pairCount * 100000 + remaining.length * 100000;
+  return certs.length * 100000;
 }
 
-// 표시용 선택 개수: 페어는 1로 카운트
+// 표시용 선택 개수 (1+1 이벤트 비활성화 — 실제 선택 수)
 function calcEffectiveCount(certs: string[]): number {
-  const { remaining, pairCount } = matchPairs(certs);
-  return pairCount + remaining.length;
+  return certs.length;
 }
+
+// 🎁 1+1 이벤트 활성화 시 아래 함수로 교체:
+// function calcAmount(certs: string[]): number {
+//   const { remaining, pairCount } = matchPairs(certs);
+//   return pairCount * 100000 + remaining.length * 100000;
+// }
+// function calcEffectiveCount(certs: string[]): number {
+//   const { remaining, pairCount } = matchPairs(certs);
+//   return pairCount + remaining.length;
+// }
 
 // DB 저장용: 1+1 페어를 "cert1 & cert2" 한 개 원소로 병합 (오피스에서 1개로 카운트)
 function mergePairsForDb(certs: string[]): string[] {
@@ -366,7 +374,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           address: formData.address,
           address_main: formData.addressMain,
           address_detail: formData.addressDetail,
-          certificates: mergePairsForDb(formData.certificates),
+          certificates: formData.certificates,
           cash_receipt: formData.cash_receipt,
           photo_url,
           order_id: orderId,
@@ -1072,7 +1080,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                       <span style={{ whiteSpace: "pre-line" }}>{cat.label}</span>
                     </button>
                   );
-                  if (idx === 2) {
+                  {/* 🎁 1+1 이벤트 탭 (비활성화 상태) */}
+                  {/* if (idx === 2) {
                     return [
                       btn,
                       <button
@@ -1083,7 +1092,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         <span style={{ whiteSpace: "pre-line" }}>{"✅ 1+1\n 이벤트"}</span>
                       </button>,
                     ];
-                  }
+                  } */}
                   return [btn];
                 })}
               </div>
@@ -1094,40 +1103,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                   <div className={styles.certCategorySection}>
                     <div className={styles.certListContainer}>
 
-                      {selectedCategoryIdx === ONE_PLUS_ONE_IDX ? (
-                        /* 1+1 이벤트 뷰 */
-                        <>
-                          <div
-                            style={{
-                              padding: "8px 12px",
-                              marginBottom: 6,
-                              fontSize: 12,
-                              color: "#e85d04",
-                              fontWeight: 600,
-                              background: "#fff7ed",
-                              border: "1px solid #fed7aa",
-                            }}
-                          >
-                            ✅ 취업 프로젝트 진행중
-                          </div>
-                          {ONE_PLUS_ONE_PAIRS.map(([cert1, cert2], pairIdx) => {
-                            const hasBoth =
-                              formData.certificates.includes(cert1) &&
-                              formData.certificates.includes(cert2);
-                            return (
-                              <button
-                                key={`pair-${pairIdx}`}
-                                onClick={() => handlePairToggle(cert1, cert2)}
-                                className={`${styles.certListItem} ${hasBoth ? styles.certListItemSelected : ""}`}
-                                style={hasBoth ? { background: "#3b82f6", color: "#fff" } : {}}
-                              >
-                                <span>{cert1} &amp; {cert2}</span>
-                                {hasBoth && <span>✓</span>}
-                              </button>
-                            );
-                          })}
-                        </>
-                      ) : selectedCategoryIdx === -1 ? (
+                      {selectedCategoryIdx === -1 ? (
                         /* 패키지 전용 뷰 */
                         <>
                           <button
@@ -1214,67 +1190,21 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     {calcAmount(formData.certificates).toLocaleString()}
                   </span>{" "}
                   원
-                  {ONE_PLUS_ONE_PAIRS.some(
-                    ([c1, c2]) =>
-                      formData.certificates.includes(c1) &&
-                      formData.certificates.includes(c2),
-                  ) && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        color: "#e85d04",
-                        marginLeft: 4,
-                      }}
-                    >
-                      (1+1 이벤트 적용)
-                    </span>
-                  )}
+                  {/* 🎁 1+1 이벤트 적용 라벨 (비활성화 상태) */}
                 </span>
               </div>
               <div className={styles.selectedCertList}>
-                {(() => {
-                  const tags: React.ReactNode[] = [];
-                  const { remaining, pairCount: _ } = matchPairs(formData.certificates);
-                  const usedInPairs = formData.certificates.filter(
-                    (c) => !remaining.includes(c),
-                  );
-                  // 매칭된 페어를 태그로 묶어서 표시
-                  const pairedRemaining = [...formData.certificates];
-                  for (const [cert1, cert2] of ONE_PLUS_ONE_PAIRS) {
-                    const i1 = pairedRemaining.indexOf(cert1);
-                    const i2 = pairedRemaining.indexOf(cert2);
-                    if (i1 !== -1 && i2 !== -1) {
-                      pairedRemaining.splice(Math.max(i1, i2), 1);
-                      pairedRemaining.splice(Math.min(i1, i2), 1);
-                      tags.push(
-                        <div key={`${cert1}-${cert2}`} className={styles.selectedCertTag}>
-                          <span>{cert1} &amp; {cert2}</span>
-                          <button
-                            className={styles.removeTagButton}
-                            onClick={() => handlePairToggle(cert1, cert2)}
-                          >
-                            ✕
-                          </button>
-                        </div>,
-                      );
-                    }
-                  }
-                  // 페어 미매칭 개별 자격증
-                  for (const cert of pairedRemaining) {
-                    tags.push(
-                      <div key={cert} className={styles.selectedCertTag}>
-                        <span>{cert}</span>
-                        <button
-                          className={styles.removeTagButton}
-                          onClick={() => handleCertToggle(cert)}
-                        >
-                          ✕
-                        </button>
-                      </div>,
-                    );
-                  }
-                  return tags;
-                })()}
+                {formData.certificates.map((cert) => (
+                  <div key={cert} className={styles.selectedCertTag}>
+                    <span>{cert}</span>
+                    <button
+                      className={styles.removeTagButton}
+                      onClick={() => handleCertToggle(cert)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
                 {formData.certificates.length === 0 && (
                   <div className={styles.noCertMessage}>
                     선택한 자격증이 없습니다
