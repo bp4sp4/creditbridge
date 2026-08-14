@@ -40,11 +40,7 @@ const CERTIFICATE_CATEGORIES = [
   },
   {
     label: "공통분야",
-    options: [
-      "자원봉사지도사1급",
-      "심리상담사1급",
-      "안전교육지도사1급",
-    ],
+    options: ["자원봉사지도사1급", "심리상담사1급", "안전교육지도사1급"],
   },
   {
     label: "사회복지 ",
@@ -70,7 +66,6 @@ const CERTIFICATE_CATEGORIES = [
     options: [
       "방과후아동지도사1급",
       "방과후돌봄교실지도사1급",
-      "방과후수학지도사1급",
       "방과후학교지도사1급",
       "독서지도사1급",
       "진로적성상담사1급",
@@ -155,7 +150,10 @@ const ONE_PLUS_ONE_PAIRS: [string, string][] = [
 const ONE_PLUS_ONE_IDX = -2;
 
 // 1+1 페어 매칭 후 남은 배열과 매칭된 쌍 수 반환
-function matchPairs(certs: string[]): { remaining: string[]; pairCount: number } {
+function matchPairs(certs: string[]): {
+  remaining: string[];
+  pairCount: number;
+} {
   const remaining = [...certs];
   let pairCount = 0;
   for (const [cert1, cert2] of ONE_PLUS_ONE_PAIRS) {
@@ -445,9 +443,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     try {
                       // 크로스도메인 체크 - 같은 도메인이면 URL 확인 가능
                       const popupUrl = paymentWindow.location.href;
-                      if (
-                        popupUrl.includes("?payment=success")
-                      ) {
+                      if (popupUrl.includes("?payment=success")) {
                         // 결제 완료 페이지 도달 - 팝업 닫기 신호 전송
                         if (!popupClosing) {
                           popupClosing = true;
@@ -516,13 +512,15 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         stepParam,
         paymentParam,
         search: window.location.search,
-        fullUrl: window.location.href
+        fullUrl: window.location.href,
       });
 
       // step=3이 URL에 있으면 무조건 step 3으로 설정 (결제 완료)
       // payment=success가 있거나 step=3만 있어도 결제 완료로 간주
       if (stepParam === "3") {
-        console.log("Setting step to 3 - Payment completed (stepParam=3 detected)");
+        console.log(
+          "Setting step to 3 - Payment completed (stepParam=3 detected)",
+        );
         sessionStorage.removeItem("paymentProcessing");
         sessionStorage.setItem("paymentProcessed", "true");
         setStep(3);
@@ -741,13 +739,11 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 className={styles.inputField}
                 style={{
                   borderColor:
-                    formData.birth_prefix &&
-                    formData.birth_prefix.length !== 6
+                    formData.birth_prefix && formData.birth_prefix.length !== 6
                       ? "#fbbf24"
                       : undefined,
                   backgroundColor:
-                    formData.birth_prefix &&
-                    formData.birth_prefix.length !== 6
+                    formData.birth_prefix && formData.birth_prefix.length !== 6
                       ? "#fef3c7"
                       : undefined,
                 }}
@@ -760,30 +756,28 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 }}
                 placeholder="YYMMDD (예: 730104)"
               />
-              {formData.birth_prefix &&
-                formData.birth_prefix.length !== 6 && (
-                  <p
-                    style={{
-                      color: "#b45309",
-                      fontSize: "12px",
-                      marginTop: "4px",
-                    }}
-                  >
-                    6자리 숫자를 입력해주세요 (예: 730104)
-                  </p>
-                )}
-              {formData.birth_prefix &&
-                formData.birth_prefix.length === 6 && (
-                  <p
-                    style={{
-                      color: "#16a34a",
-                      fontSize: "12px",
-                      marginTop: "4px",
-                    }}
-                  >
-                    ✓ 올바른 형식입니다
-                  </p>
-                )}
+              {formData.birth_prefix && formData.birth_prefix.length !== 6 && (
+                <p
+                  style={{
+                    color: "#b45309",
+                    fontSize: "12px",
+                    marginTop: "4px",
+                  }}
+                >
+                  6자리 숫자를 입력해주세요 (예: 730104)
+                </p>
+              )}
+              {formData.birth_prefix && formData.birth_prefix.length === 6 && (
+                <p
+                  style={{
+                    color: "#16a34a",
+                    fontSize: "12px",
+                    marginTop: "4px",
+                  }}
+                >
+                  ✓ 올바른 형식입니다
+                </p>
+              )}
             </div>
             <div className={styles.inputGroup}>
               <label className={styles.inputLabel}>
@@ -976,10 +970,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               )}
             </div>
 
-            <div
-              className={styles.inputGroup}
-              style={{ marginTop: "20px" }}
-            >
+            <div className={styles.inputGroup} style={{ marginTop: "20px" }}>
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
@@ -1077,11 +1068,16 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                       className={`${styles.certCategoryItem} ${idx === selectedCategoryIdx ? styles.certCategoryItemActive : styles.certCategoryItemInactive}`}
                       onClick={() => setSelectedCategoryIdx(idx)}
                     >
-                      <span style={{ whiteSpace: "pre-line" }}>{cat.label}</span>
+                      <span style={{ whiteSpace: "pre-line" }}>
+                        {cat.label}
+                      </span>
                     </button>
                   );
-                  {/* 🎁 1+1 이벤트 탭 (비활성화 상태) */}
-                  {/* if (idx === 2) {
+                  {
+                    /* 🎁 1+1 이벤트 탭 (비활성화 상태) */
+                  }
+                  {
+                    /* if (idx === 2) {
                     return [
                       btn,
                       <button
@@ -1092,7 +1088,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         <span style={{ whiteSpace: "pre-line" }}>{"✅ 1+1\n 이벤트"}</span>
                       </button>,
                     ];
-                  } */}
+                  } */
+                  }
                   return [btn];
                 })}
               </div>
@@ -1102,37 +1099,53 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 <div className={styles.certListWrapper}>
                   <div className={styles.certCategorySection}>
                     <div className={styles.certListContainer}>
-
                       {selectedCategoryIdx === -1 ? (
                         /* 패키지 전용 뷰 */
                         <>
                           <button
                             onClick={() => {
-                              const allSelected = PACKAGE_CERTS.every((c) => formData.certificates.includes(c));
+                              const allSelected = PACKAGE_CERTS.every((c) =>
+                                formData.certificates.includes(c),
+                              );
                               if (allSelected) {
                                 setFormData((prev) => ({
                                   ...prev,
-                                  certificates: prev.certificates.filter((c) => !PACKAGE_CERTS.includes(c)),
+                                  certificates: prev.certificates.filter(
+                                    (c) => !PACKAGE_CERTS.includes(c),
+                                  ),
                                 }));
                               } else {
                                 setFormData((prev) => ({
                                   ...prev,
-                                  certificates: [...new Set([...prev.certificates, ...PACKAGE_CERTS])],
+                                  certificates: [
+                                    ...new Set([
+                                      ...prev.certificates,
+                                      ...PACKAGE_CERTS,
+                                    ]),
+                                  ],
                                 }));
                               }
                             }}
                             className={`${styles.certListItem} ${PACKAGE_CERTS.every((c) => formData.certificates.includes(c)) ? styles.certListItemSelected : ""}`}
                             style={{
-                              background: PACKAGE_CERTS.every((c) => formData.certificates.includes(c))
+                              background: PACKAGE_CERTS.every((c) =>
+                                formData.certificates.includes(c),
+                              )
                                 ? "#3b82f6"
                                 : "#eff6ff",
-                              color: PACKAGE_CERTS.every((c) => formData.certificates.includes(c)) ? "#fff" : "#2563eb",
+                              color: PACKAGE_CERTS.every((c) =>
+                                formData.certificates.includes(c),
+                              )
+                                ? "#fff"
+                                : "#2563eb",
                               border: "1.5px solid #93c5fd",
                               fontWeight: "700",
                             }}
                           >
                             <span>3개 전체 선택</span>
-                            {PACKAGE_CERTS.every((c) => formData.certificates.includes(c)) && <span>✓</span>}
+                            {PACKAGE_CERTS.every((c) =>
+                              formData.certificates.includes(c),
+                            ) && <span>✓</span>}
                           </button>
                           {PACKAGE_CERTS.map((opt) => (
                             <button
@@ -1141,7 +1154,9 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                               className={`${styles.certListItem} ${formData.certificates.includes(opt) ? styles.certListItemSelected : ""}`}
                             >
                               <span>{opt}</span>
-                              {formData.certificates.includes(opt) && <span>✓</span>}
+                              {formData.certificates.includes(opt) && (
+                                <span>✓</span>
+                              )}
                             </button>
                           ))}
                         </>
@@ -1150,25 +1165,34 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                         <>
                           <button
                             key={`all-${selectedCategoryIdx}`}
-                            onClick={() => handleToggleCategoryAll(selectedCategoryIdx)}
+                            onClick={() =>
+                              handleToggleCategoryAll(selectedCategoryIdx)
+                            }
                             className={`${styles.certListItem} ${CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.every((o) => formData.certificates.includes(o)) ? styles.certListItemSelected : ""}`}
                           >
                             <span>전체</span>
-                            {CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.every((o) => formData.certificates.includes(o)) && <span>✓</span>}
+                            {CERTIFICATE_CATEGORIES[
+                              selectedCategoryIdx
+                            ].options.every((o) =>
+                              formData.certificates.includes(o),
+                            ) && <span>✓</span>}
                           </button>
-                          {CERTIFICATE_CATEGORIES[selectedCategoryIdx].options.map((opt) => (
+                          {CERTIFICATE_CATEGORIES[
+                            selectedCategoryIdx
+                          ].options.map((opt) => (
                             <button
                               key={opt}
                               onClick={() => handleCertToggle(opt)}
                               className={`${styles.certListItem} ${formData.certificates.includes(opt) ? styles.certListItemSelected : ""}`}
                             >
                               <span>{opt}</span>
-                              {formData.certificates.includes(opt) && <span>✓</span>}
+                              {formData.certificates.includes(opt) && (
+                                <span>✓</span>
+                              )}
                             </button>
                           ))}
                         </>
                       )}
-
                     </div>
                   </div>
                 </div>
@@ -1189,8 +1213,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                   <span className={styles.selectedCertPriceNumber}>
                     {calcAmount(formData.certificates).toLocaleString()}
                   </span>{" "}
-                  원
-                  {/* 🎁 1+1 이벤트 적용 라벨 (비활성화 상태) */}
+                  원{/* 🎁 1+1 이벤트 적용 라벨 (비활성화 상태) */}
                 </span>
               </div>
               <div className={styles.selectedCertList}>
