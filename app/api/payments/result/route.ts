@@ -99,6 +99,7 @@ export async function GET(request: NextRequest) {
           payment_status: 'paid',
           trade_id: tradeid,
           mul_no: mul_no,
+          pay_method: 'card', // PayApp 결제 완료 = 카드결제로 기록
           paid_at: new Date().toISOString()
         })
         .eq('order_id', var1)
@@ -448,6 +449,7 @@ export async function POST(request: NextRequest) {
           payment_status: 'paid',
           trade_id: tradeid,
           mul_no: mul_no,
+          pay_method: 'card', // PayApp 결제 완료 = 카드결제로 기록
           paid_at: new Date().toISOString()
         })
         .eq('order_id', var1)

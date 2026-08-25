@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
           payment_status: 'paid',
           trade_id: tradeid,
           mul_no: mul_no,
-          pay_method: paymethod,
+          pay_method: paymethod || 'card', // PayApp이 paymethod를 안 보내는 경우가 많아 카드로 기본 기록
           paid_at: new Date().toISOString()
         })
         .eq('order_id', var1)
