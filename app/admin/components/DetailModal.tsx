@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
+import { HANJIKHUN_EXTRA_CATEGORIES } from "../../../lib/hanjikhun-extra-certificates";
 
 type Application = {
   id: string;
@@ -127,6 +128,8 @@ const CERTIFICATE_CATEGORIES = [
     label: "공통분야",
     options: ["자원봉사지도사 1급", "심리상담사 1급", "안전관리사/안전교육지도사"],
   },
+  // 한직훈 LMS 과정 중 위 분야에 없던 것들 — 한직훈 분류대로 탭 추가 (lib/hanjikhun-extra-certificates.ts)
+  ...HANJIKHUN_EXTRA_CATEGORIES,
 ];
 
 type DetailModalProps = {

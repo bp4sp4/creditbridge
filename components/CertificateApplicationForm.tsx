@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import StepIndicator from "./StepIndicator";
 import styles from "./stepflow.module.css";
 import DaumPostcodeInput from "./DaumPostcodeInput";
+import { HANJIKHUN_EXTRA_CATEGORIES } from "../lib/hanjikhun-extra-certificates";
 
 // 자격증 데이터 구조
 const CERTIFICATE_CATEGORIES = [
@@ -114,6 +115,8 @@ const CERTIFICATE_CATEGORIES = [
       "다문화심리상담사 1급",
     ],
   },
+  // 한직훈 LMS 과정 중 위 분야에 없던 것들 — 한직훈 분류대로 탭 추가 (lib/hanjikhun-extra-certificates.ts)
+  ...HANJIKHUN_EXTRA_CATEGORIES,
 ];
 
 // =====================================================================
