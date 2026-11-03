@@ -339,20 +339,88 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
     return numbers.slice(0, 6);
   };
 
+  // 업로드 전 사진 자동 축소 (Vercel 요청 본문 4.5MB 한도 대응)
+  // 긴 변 1200px, JPEG 품질 0.85로 리사이즈 — 증명사진 용도로 충분한 화질
+  const compressPhoto = async (file: File): Promise<File> => {
+    try {
+      const MAX_DIM = 1200;
+      const url = URL.createObjectURL(file);
+      const img = document.createElement("img");
+      try {
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("이미지 읽기 실패"));
+          img.src = url;
+        });
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+
+      const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+      // 투명 PNG가 JPEG 변환 시 검은 배경이 되지 않도록 흰색으로 채움
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg", 0.85),
+      );
+      if (!blob || blob.size === 0) return file;
+
+      const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+      return new File([blob], name, { type: "image/jpeg" });
+    } catch {
+      // 축소 실패 시 원본 그대로 업로드 시도
+      return file;
+    }
+  };
+
+  // 서버 응답을 안전하게 JSON으로 파싱
+  // (502/504 등 비-JSON 에러 페이지가 와도 영어 오류 대신 한국어 안내를 띄움)
+  const parseJsonSafe = async (res: Response, failMsg: string) => {
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(
+        `${failMsg} (상태 ${res.status}). 잠시 후 다시 시도해주세요.`,
+      );
+    }
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     let photo_url = null;
 
     try {
       if (formData.photo) {
+        // 업로드 전 사진 축소 (모바일 대용량 사진 → 4.5MB 한도 초과 방지)
+        const photoFile = await compressPhoto(formData.photo);
+        if (photoFile.size > 4 * 1024 * 1024) {
+          throw new Error(
+            "사진 용량이 너무 큽니다. 다른 사진으로 다시 시도해주세요.",
+          );
+        }
+
         // 서버 라우트로 업로드 (Supabase JWS 이슈 회피)
         const uploadFormData = new FormData();
-        uploadFormData.append("file", formData.photo);
+        uploadFormData.append("file", photoFile);
         const uploadRes = await fetch("/api/upload-photo", {
           method: "POST",
           body: uploadFormData,
         });
-        const uploadJson = await uploadRes.json();
+        const uploadJson = await parseJsonSafe(
+          uploadRes,
+          "사진 업로드에 실패했습니다",
+        );
         if (!uploadRes.ok) throw new Error(uploadJson.error || "업로드 실패");
         photo_url = uploadJson.path;
       }
@@ -382,7 +450,10 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         }),
       });
 
-      const appResult = await appResponse.json();
+      const appResult = await parseJsonSafe(
+        appResponse,
+        "신청 저장에 실패했습니다",
+      );
       if (!appResponse.ok) throw new Error(appResult.error || "신청 저장 실패");
       const applicationData = appResult.data;
 
@@ -408,7 +479,10 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           }),
         });
 
-        const responseData = await paymentResponse.json();
+        const responseData = await parseJsonSafe(
+          paymentResponse,
+          "결제 요청에 실패했습니다",
+        );
         setLoading(false);
 
         if (responseData.success && responseData.data?.payurl) {
