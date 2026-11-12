@@ -49,7 +49,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 아동미술심리상담사1급
 부모교육상담사1급
 실버인지활동지도사1급
-지역아동교육지도사1급
+(지역)아동교육지도사1급
 방과후돌봄교실지도사1급
 학교폭력예방상담사1급
 진로적성상담사1급
@@ -63,7 +63,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 방과후학교지도사1급
 독서지도사1급
 진로적성상담사1급
-지역아동교육지도사1급
+(지역)아동교육지도사1급
 동화구연지도사1급
 아동공예지도사1급
 아동요리지도사1급
@@ -73,7 +73,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 디지털중독예방지도사1급
 
 3. 교양수업 이수과목 발급가능 자격증
-지역아동교육지도사1급
+(지역)아동교육지도사1급
 심리분석사1급
 심리상담사1급
 부동산권리분석사1급
