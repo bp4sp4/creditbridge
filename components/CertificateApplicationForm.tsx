@@ -7,6 +7,7 @@ import StepIndicator from "./StepIndicator";
 import styles from "./stepflow.module.css";
 import DaumPostcodeInput from "./DaumPostcodeInput";
 import { HANJIKHUN_EXTRA_CATEGORIES } from "../lib/hanjikhun-extra-certificates";
+import { readUpsellCode } from "../lib/upsell";
 
 // 자격증 데이터 구조
 const CERTIFICATE_CATEGORIES = [
@@ -425,6 +426,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
         photo_url = uploadJson.path;
       }
 
+      const upsellCode = readUpsellCode();
       // 결제 금액 계산 (2+1 패키지 할인 적용)
       const amount = calcAmount(formData.certificates);
       const orderId = `CERT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -447,6 +449,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           amount: amount,
           payment_status: "pending",
           source: "bridge",
+          // 업셀링 캠페인 문자 링크로 들어왔으면 그 코드(UP-xxx)
+          ...(upsellCode ? { upsell_code: upsellCode } : {}),
         }),
       });
 
@@ -578,6 +582,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   // 결제 완료 후 URL 파라미터에서 step 감지
   useEffect(() => {
     if (typeof window !== "undefined") {
+      readUpsellCode(); // 업셀링 문자 링크의 캠페인 코드를 주소가 바뀌기 전에 기억
       const params = new URLSearchParams(window.location.search);
       const stepParam = params.get("step");
       const paymentParam = params.get("payment");
