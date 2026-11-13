@@ -6,9 +6,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const supabase = createClient();
 
+    // [선택] 광고성 정보 수신 동의 — 화면이 보낸 marketingAgreed 를 DB 칸으로 옮긴다.
+    // 참일 때만 동의 시각을 남기고, 몸통에 marketing_agreed* 가 직접 와도 이 값으로 덮어쓴다 (정보통신망법 제50조)
+    const { marketingAgreed, ...rest } = body ?? {};
+    const agreed = marketingAgreed === true;
+    const row = {
+      ...rest,
+      marketing_agreed: agreed,
+      marketing_agreed_at: agreed ? new Date().toISOString() : null,
+    };
+
     const { data, error } = await supabase
       .from('certificate_applications')
-      .insert([body])
+      .insert([row])
       .select()
       .single();
 

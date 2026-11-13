@@ -219,6 +219,9 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   const [showCertModal, setShowCertModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  // [선택] 광고성 정보 수신 동의 — 기본은 체크 안 됨, 체크 안 해도 신청 가능 (정보통신망법 제50조)
+  const [marketingAgreed, setMarketingAgreed] = useState(false);
+  const [showMarketingModal, setShowMarketingModal] = useState(false);
   const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
   const [isInitializing, setIsInitializing] = useState(true);
   const [photoUploadChoice, setPhotoUploadChoice] = useState<"yes" | "no">(
@@ -449,6 +452,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
           amount: amount,
           payment_status: "pending",
           source: "bridge",
+          marketingAgreed,
           // 업셀링 캠페인 문자 링크로 들어왔으면 그 코드(UP-xxx)
           ...(upsellCode ? { upsell_code: upsellCode } : {}),
         }),
@@ -1049,7 +1053,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               )}
             </div>
 
-            <div className={styles.inputGroup} style={{ marginTop: "20px" }}>
+            <div className={`${styles.inputGroup} ${styles.checkboxStack}`} style={{ marginTop: "20px" }}>
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
@@ -1066,6 +1070,24 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                     개인정보처리방침
                   </button>{" "}
                   동의
+                </span>
+              </label>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={marketingAgreed}
+                  onChange={(e) => setMarketingAgreed(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <span>
+                  <button
+                    type="button"
+                    className={styles.privacyLink}
+                    onClick={() => setShowMarketingModal(true)}
+                  >
+                    광고성 정보 수신
+                  </button>{" "}
+                  동의 <span className={styles.optionalMark}>(선택)</span>
                 </span>
               </label>
             </div>
@@ -1450,7 +1472,7 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                 <p className={styles.modalPrivacyItem}>
                   <strong>3. 보유 및 이용 기간</strong>
                   <br />
-                  법령이 정하는 경우를 제외하고는 수집일로부터 1년 또는 동의
+                  법령이 정하는 경우를 제외하고는 수집일로부터 5년 또는 동의
                   철회 시까지 보유 및 이용합니다.
                 </p>
                 <p className={styles.modalPrivacyItem}>
@@ -1458,6 +1480,56 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                   <br />
                   신청자는 동의를 거부할 권리가 있습니다. 단, 동의를 거부하는
                   경우 상담 서비스 이용이 제한됩니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* [선택] 광고성 정보 수신 동의 모달 */}
+      {showMarketingModal && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setShowMarketingModal(false)}
+        >
+          <div
+            className={styles.modalPrivacy}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalPrivacyHeader}>
+              <h3 className={styles.modalPrivacyTitle}>
+                [선택] 광고성 정보 수신 동의
+              </h3>
+              <button
+                className={styles.modalCloseButton}
+                onClick={() => setShowMarketingModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.modalPrivacyContent}>
+              <div className={styles.modalPrivacyScroll}>
+                <p className={styles.modalPrivacyItem}>
+                  <strong>1. 목적</strong>
+                  <br />
+                  교육 과정 · 자격증 · 할인 · 이벤트 등 혜택 안내
+                </p>
+                <p className={styles.modalPrivacyItem}>
+                  <strong>2. 방법</strong>
+                  <br />
+                  문자(SMS · LMS · MMS), 카카오톡, 전화
+                </p>
+                <p className={styles.modalPrivacyItem}>
+                  <strong>3. 보유 · 이용 기간</strong>
+                  <br />
+                  동의 철회 시 또는 수집일로부터 5년
+                </p>
+                <p className={styles.modalPrivacyItem}>
+                  <strong>4. 거부 권리</strong>
+                  <br />
+                  동의하지 않아도 상담 신청은 할 수 있으며, 동의 후에도 언제든
+                  무료수신거부로 철회할 수 있습니다.
                 </p>
               </div>
             </div>
