@@ -222,6 +222,12 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
   // [선택] 광고성 정보 수신 동의 — 기본은 체크 안 됨, 체크 안 해도 신청 가능 (정보통신망법 제50조)
   const [marketingAgreed, setMarketingAgreed] = useState(false);
   const [showMarketingModal, setShowMarketingModal] = useState(false);
+  // 「모두 동의」 — 필수(개인정보) + 선택(광고성 정보 수신)을 한 번에 켜고 끔. 결제하기 버튼 조건은 필수(privacyAgreed)만 봄
+  const allConsentsAgreed = privacyAgreed && marketingAgreed;
+  const handleAllConsents = (checked: boolean) => {
+    setPrivacyAgreed(checked);
+    setMarketingAgreed(checked);
+  };
   const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
   const [isInitializing, setIsInitializing] = useState(true);
   const [photoUploadChoice, setPhotoUploadChoice] = useState<"yes" | "no">(
@@ -1057,6 +1063,18 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
+                  checked={allConsentsAgreed}
+                  onChange={(e) => handleAllConsents(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <span>
+                  <strong>모두 동의합니다</strong>{" "}
+                  <span className={styles.optionalMark}>(선택 항목 포함)</span>
+                </span>
+              </label>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
                   checked={privacyAgreed}
                   onChange={(e) => setPrivacyAgreed(e.target.checked)}
                   className={styles.checkbox}
@@ -1467,7 +1485,8 @@ function StepFlowContent({ clickSource }: { clickSource: string }) {
                   <strong>2. 수집 및 이용하는 개인정보 항목</strong>
                   <br />
                   필수 - 이름, 연락처(휴대전화번호), 생년월일, 주소, 자격증종류
-                  선택 - 증명사진, 상세주소
+                  <br />
+                  선택 - 증명사진, 상세주소, 광고성 정보 수신 동의 여부
                 </p>
                 <p className={styles.modalPrivacyItem}>
                   <strong>3. 보유 및 이용 기간</strong>
